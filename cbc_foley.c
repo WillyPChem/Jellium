@@ -31,10 +31,10 @@ int main()
 
 		x2 = dx*j;
 
-		psi1 = sqrt(2./10)*sin(pi*x1/10.);
-		psi2 = sqrt(2./10)*sin(pi*2.*x1/10.);
-		psi3 = sqrt(2./10)*sin(pi*x2/10.);
-		psi4 = sqrt(2./10)*sin(pi*2.*x2/10.);
+		psi1 = sqrt(2./10)*sin((pi*x1)/10.);
+		psi2 = sqrt(2./10)*sin((pi*2.*x1)/10.);
+		psi3 = sqrt(2./10)*sin((pi*x2)/10.);
+		psi4 = sqrt(2./10)*sin((pi*2.*x2)/10.);
 
 		ee = 1./fabs(x1-x2);
 		sum += psi1*psi2*ee*psi3*psi4;
@@ -50,3 +50,7 @@ int main()
 	printf(" %f\n",total);
 	
 }
+
+
+
+
