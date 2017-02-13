@@ -36,7 +36,7 @@ int main()
 		psi3 = sqrt(2./10)*sin(pi*x2/10.);
 		psi4 = sqrt(2./10)*sin(pi*2.*x2/10.);
 
-		ee = 1.*fabs(x1-x2);
+		ee = 1./fabs(x1-x2);
 		sum += psi1*psi2*ee*psi3*psi4;
 		printf("%i %i %f %f %f %f %f %f \n",i,j,psi1,psi2,psi3,psi4,ee,sum);
 		
