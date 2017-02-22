@@ -47,7 +47,6 @@ int ncis, nstates; // ncis is total # of single excited configurations, nstates 
 double enuc, *S, *AO, *V, *Hcore, *E;
 
 int nmin, nmax, lmin, lmax;
-int n,l,m;
 int *nval, *lval, *mval;
 
 
@@ -65,7 +64,7 @@ int main()
     nmax = 3; // highest eigenfunction value for n.
     
     lmin = 0; // lowest l
-    lmin = 3; // highest l 
+    lmax = 3; // highest l 
 
     nelec = 4; // varies for given system. 10 for water.
     
@@ -76,6 +75,7 @@ int main()
 
      AO = (double *)malloc(nmax*nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
    // E = (double *)malloc(nmax*nmax*sizeof(double));
+
 
 
     // NEED EXPLANATION ON HOW THIS LIMITS TO S,P,D ORBITALS
@@ -132,11 +132,13 @@ void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T)
 {
     // n,l,m
     int idx = 0;
-    for ( n=nmin; n<=nmax; n++)
+    printf("  nmin is %i, nmax is %i\n",nmin,nmax);
+    printf("  lmin is %i, lmax is %i\n",lmin,lmax); 
+    for ( int n=nmin; n<=nmax; n++)
     {
-        for ( l=lmin; l<=lmax; l++)
+        for ( int l=lmin; l<=lmax; l++)
         {
-            for ( m = -l; m<=l; m++)
+            for ( int m = -l; m<=l; m++)
             {
                 nval[idx] = n;
                 lval[idx] = l;
