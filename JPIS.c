@@ -7,6 +7,8 @@
 //
 
 #include<stdio.h>
+#include<iostream>
+#include<cmath>
 #include<math.h>
 #include<stdlib.h>
 #include<complex.h>
@@ -23,8 +25,10 @@ double sum, total;
 
 double L;
 
-double m = 1., hbar = 1.;
+double mass = 1.;
+double hbar = 1.;
 
+void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T);
 void Spherical_Y(int l, int m, double theta, double phi, double *YR, double *YI);
 double Legendre(int l, int m, double theta);
 double Bessel(double R, double r, int n, int l);
@@ -33,35 +37,46 @@ double prefac(int m, int l);
 double factorial(int n);
 double plgndr(int l, int m, double x);
 
-
-
 //Basic Parameters
-int nmax, nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
+int nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
 int nocc, nuno; // nocc = number of occupied orbitals, which is total # of electrons / 2, with 2 electrons per orbital.
                 // nuno is remaining unoccupied orbitals.
 int ncis, nstates; // ncis is total # of single excited configurations, nstates is total number of ncis plus ground state configuration.
 
 // Relevant Hartree Fock Matrices
-double enuc, *S, *T, *V, *Hcore;
+double enuc, *S, *T, *V, *Hcore, *E;
+
+int nmin, nmax, lmin, lmax;
+int n,l,m;
+int *nval, *lval, *mval;
 
 
 // Required energy functions.
 
-
-
 int main()
 
 {
+
     
     // DEFINE BASIC PARAMETERS (try for r only first...)
     pi = 4.*atan(1.0);
     
-    nmax = 3; // highest eigenfunction value for n.
+    nmin = 0; // lowest eigenfunction value for n.
+    nmax = 12; // highest eigenfunction value for n.
+    
+    lmin = 0; // lowest l
+    lmin = 12; // highest l 
+
     nelec = 4; // varies for given system. 10 for water.
     
+
+    T = (double *)malloc(nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
+    E = (double *)malloc(3*nmax*nmax*nmax*sizeof(double));
+
     // NEED EXPLANATION ON HOW THIS LIMITS TO S,P,D ORBITALS
     //
     // total number of orbitals... note we are limiting l<=2 in this case (s, p, and d orbs)
+
     ntotal=0;
     for (i=1; i<=nmax; i++) {
         
@@ -88,77 +103,49 @@ int main()
     
     printf(" # of single excited states is %i\n",ncis);
     printf(" # of total states is %i\n",nstates);
-    
+
+    MAX_I = 100.; // nmax => The length of the box. Er, radius of particle. Err...
+    L = 10;
+
+    Phi(L, nmin, nmax, lmin, lmax, E);
     
     // HARTREE FOCK RELEVANT MATRICIES
-    
     S = (double *)malloc(nmax*nmax*sizeof(double)); // A-O Overlap Matrix
-    T = (double *)malloc(nmax*nmax*sizeof(double)); // Kinetic Energy Matrix
-    Hcore = (double *)malloc(dim*dim*sizeof(double)); // Hamiltonian Core for HF
-    
-    MAX_I = 10.; // nmax => The length of the box.
-    
-    L = MAX_I;
-    
-    
-    sum = 0.;
-    i = 0;
-    j = 0;
-    
-    for(i=0; i<=MAX_I; i++)
-    {
-        x1 = dx*i;
-        
-        for(j=0; j<=MAX_I; j++)
-        {
-            
-            x2 = dx*j;
-            
-            psi1 = sqrt(2./L)*sin((pi*x1)/L);
-            psi2 = sqrt(2./L)*sin((pi*2.*x1)/L);
-            psi3 = sqrt(2./L)*sin((pi*x2)/L);
-            psi4 = sqrt(2./L)*sin((pi*2.*x2)/L);
-            
-            ee = 1./fabs(x1-x2);
-            sum += psi1*psi2*ee*psi3*psi4;
-            //printf("%i %i %f %f %f %f %f %f \n",i,j,psi1,psi2,psi3,psi4,ee,sum);
-            
-        }
-        
-        total +=sum;
-        
-        
-    }
-    
-    //printf(" %f\n",total);
+    Hcore = (double *)malloc(nmax*nmax*sizeof(double)); // Hamiltonian Core for HF
+
+    // Calculate orbital energies for HF.
     
 }
 
 
+/* 
+/ Function to Determine Energy Calculation
+/ Take function and loop through n to keep all atomic orbital energy levels.
+*/
 
-double Phi(double R, double r, double theta, double phi)
+void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T)
 {
-    
-    double r, theta, phi;
-    double dr, dtheta, dphi;
-    double Yr, Yi;
-    
-    int n = nmax;
-    
-    for (int m=0; m<=l; m++) {
-        
-        if (m<=3) {
-            m += m*m;
-            Spherical_Y(l, m, theta, phi, &Yr, &Yi);
+    // n,l,m
+    int idx = 0;
+    for ( n=nmin; n<=nmax; n++)
+    {
+        for ( l=lmin; l<=lmax; l++)
+        {
+            for ( m = -l; m<=l; m++)
+            {
+                nval[idx] = n;
+                lval[idx] = l;
+                mval[idx] = m;
+
+                T[idx] = hbar*hbar/(R*R*mass)*(2*n+l+1)*(2*n+l+1); 
+                printf(" for phi=%i, n=%i l=%i m=%i energy is %f\n",idx, nval[idx], lval[idx], mval[idx], T[idx]);
+                idx++;
             
-            return Bessel(R, r, n, l) * (Yr + I*Yi);
-        }
-        else {
-            m += 9;
-            return Bessel(R, r, n, l) * (Yr + I*Yi);
+            }
         }
     }
 }
+
 
 
 
