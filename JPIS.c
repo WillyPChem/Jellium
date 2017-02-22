@@ -12,8 +12,8 @@
 #include<math.h>
 #include<stdlib.h>
 #include<complex.h>
-#include</System/Library/Frameworks/Kernel.framework/Versions/A/Headers/sys/malloc.h>
-#include</usr/include/complex.h>
+#include<malloc.h>
+#include<complex.h>
 #include<time.h>
 
 int i,j;
@@ -44,7 +44,7 @@ int nocc, nuno; // nocc = number of occupied orbitals, which is total # of elect
 int ncis, nstates; // ncis is total # of single excited configurations, nstates is total number of ncis plus ground state configuration.
 
 // Relevant Hartree Fock Matrices
-double enuc, *S, *T, *V, *Hcore, *E;
+double enuc, *S, *AO, *V, *Hcore, *E;
 
 int nmin, nmax, lmin, lmax;
 int n,l,m;
@@ -70,7 +70,13 @@ int main()
     nelec = 4; // varies for given system. 10 for water.
     
 
-    T = (double *)malloc(nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
+	nval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+	lval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+	mval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+
+     AO = (double *)malloc(nmax*nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
+   // E = (double *)malloc(nmax*nmax*sizeof(double));
+
 
     // NEED EXPLANATION ON HOW THIS LIMITS TO S,P,D ORBITALS
     //
@@ -104,9 +110,9 @@ int main()
     printf(" # of total states is %i\n",nstates);
 
     MAX_I = 100.; // nmax => The length of the box. Er, radius of particle. Err...
-    L = 10;
+    L = 1;
 
-    Phi(L, nmin, nmax, lmin, lmax, E);
+    Phi(L, nmin, nmax, lmin, lmax, AO);
     
     // HARTREE FOCK RELEVANT MATRICIES
     S = (double *)malloc(nmax*nmax*sizeof(double)); // A-O Overlap Matrix
@@ -147,7 +153,7 @@ void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T)
     for(int jdx=0.; jdx<=nmax; jdx++)
     {
 
-    printf(" for phi=%i, n=%i l=%i m=%i energy is %f\n",jdx, nval[jdx], lval[jdx], mval[jdx], T[jdx]); 
+   // printf(" for phi=%i, n=%i l=%i m=%i energy is %f\n",jdx, nval[jdx], lval[jdx], mval[jdx], T[jdx]); 
     
     }
 }
