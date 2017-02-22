@@ -62,16 +62,15 @@ int main()
     pi = 4.*atan(1.0);
     
     nmin = 0; // lowest eigenfunction value for n.
-    nmax = 12; // highest eigenfunction value for n.
+    nmax = 3; // highest eigenfunction value for n.
     
     lmin = 0; // lowest l
-    lmin = 12; // highest l 
+    lmin = 3; // highest l 
 
     nelec = 4; // varies for given system. 10 for water.
     
 
     T = (double *)malloc(nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
-    E = (double *)malloc(3*nmax*nmax*nmax*sizeof(double));
 
     // NEED EXPLANATION ON HOW THIS LIMITS TO S,P,D ORBITALS
     //
@@ -137,16 +136,21 @@ void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T)
                 lval[idx] = l;
                 mval[idx] = m;
 
-                T[idx] = hbar*hbar/(R*R*mass)*(2*n+l+1)*(2*n+l+1); 
+                T[idx] = ((pow(hbar,2)*pow(pi,2))/(8*mass*pow(R,2)))*pow((2.*n+l+1),2); 
                 printf(" for phi=%i, n=%i l=%i m=%i energy is %f\n",idx, nval[idx], lval[idx], mval[idx], T[idx]);
                 idx++;
-            
+        
             }
         }
     }
+
+    for(int jdx=0.; jdx<=nmax; jdx++)
+    {
+
+    printf(" for phi=%i, n=%i l=%i m=%i energy is %f\n",jdx, nval[jdx], lval[jdx], mval[jdx], T[jdx]); 
+    
+    }
 }
-
-
 
 
 //  Evaluates Spherical Harmonics at values of theta and phi given
