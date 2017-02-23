@@ -7,13 +7,11 @@
 //
 
 #include<stdio.h>
-#include<iostream>
 #include<cmath>
 #include<math.h>
 #include<stdlib.h>
-#include<complex.h>
-#include<malloc.h>
-#include<complex.h>
+#include</System/Library/Frameworks/Kernel.framework/Versions/A/Headers/sys/malloc.h>
+#include</usr/include/complex.h>
 #include<time.h>
 
 int i,j;
@@ -29,6 +27,9 @@ double mass = 1.;
 double hbar = 1.;
 
 void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T);
+void AtomicOrbitalOverlap(double *A);
+
+
 void Spherical_Y(int l, int m, double theta, double phi, double *YR, double *YI);
 double Legendre(int l, int m, double theta);
 double Bessel(double R, double r, int n, int l);
@@ -61,23 +62,13 @@ int main()
     pi = 4.*atan(1.0);
     
     nmin = 0; // lowest eigenfunction value for n.
-    nmax = 3; // highest eigenfunction value for n.
+    nmax = 2; // highest eigenfunction value for n.
     
     lmin = 0; // lowest l
-    lmax = 3; // highest l 
+    lmax = 2; // highest l 
 
     nelec = 4; // varies for given system. 10 for water.
-    
-
-	nval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
-	lval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
-	mval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
-
-     AO = (double *)malloc(nmax*nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
-   // E = (double *)malloc(nmax*nmax*sizeof(double));
-
-
-
+   
     // NEED EXPLANATION ON HOW THIS LIMITS TO S,P,D ORBITALS
     //
     // total number of orbitals... note we are limiting l<=2 in this case (s, p, and d orbs)
@@ -112,11 +103,30 @@ int main()
     MAX_I = 100.; // nmax => The length of the box. Er, radius of particle. Err...
     L = 1;
 
-    Phi(L, nmin, nmax, lmin, lmax, AO);
-    
-    // HARTREE FOCK RELEVANT MATRICIES
+
+
+    // HARTREE FOCK CODE
+    // ------------------------------------
+
+    // Initialize HF relevant matricies
+    //
     S = (double *)malloc(nmax*nmax*sizeof(double)); // A-O Overlap Matrix
     Hcore = (double *)malloc(nmax*nmax*sizeof(double)); // Hamiltonian Core for HF
+    nval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+    lval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+    mval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+    AO = (double *)malloc(3*nmax*nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
+
+
+    // Calculate AO energies
+    //
+    Phi(L, nmin, nmax, lmin, lmax, AO);
+
+    // Define S matrix
+    //
+    void AtomicOrbitalOverlap(double AO);
+    
+    
 
     // Calculate orbital energies for HF.
     
@@ -151,13 +161,13 @@ void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T)
             }
         }
     }
+}
 
-    for(int jdx=0.; jdx<=nmax; jdx++)
-    {
+void AtomicOrbitalOverlap(double *A)
+{
 
-   // printf(" for phi=%i, n=%i l=%i m=%i energy is %f\n",jdx, nval[jdx], lval[jdx], mval[jdx], T[jdx]); 
-    
-    }
+        printf(" ao is %f\n",A[1]);
+
 }
 
 
