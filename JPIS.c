@@ -21,14 +21,13 @@ double psi1, psi2, psi3, psi4, ee;
 double pi;
 double sum, total;
 
-double L;
+double radius, L;
 
 double mass = 1.;
 double hbar = 1.;
 
 void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T);
 void AtomicOrbitalOverlap(double *A);
-
 
 void Spherical_Y(int l, int m, double theta, double phi, double *YR, double *YI);
 double Legendre(int l, int m, double theta);
@@ -125,6 +124,10 @@ int main()
     // Define S matrix
     //
     void AtomicOrbitalOverlap(double AO);
+
+    // Determine two electron integrals
+    //
+    void ElectronRepulsionIntegral();
     
     
 
@@ -166,9 +169,109 @@ void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T)
 void AtomicOrbitalOverlap(double *A)
 {
 
+
         printf(" ao is %f\n",A[1]);
 
 }
+
+void ElectronRepulsionIntegral()
+
+{
+
+
+
+
+
+}
+
+
+// What is big L? big M is defined as m1 + m2.
+// equation 12.
+double Nk(int n1, int n2, int l1, int l2, int m1, int m2)
+{
+
+    double nk;
+    int deltaN, deltaL, deltaM;
+
+    if (n1 == n2 && l1 == l2 && m1 == m2)
+    {
+        deltaN = 1;
+        deltaL = 1;
+        deltaM = 1;
+        nk = 1./(sqrt(2.+2*deltaN*deltaL*deltaM));   
+        return nk;
+    }
+
+    else
+        deltaN = 0;
+        deltaL = 0;
+        deltaM = 0;
+        nk = 1./(sqrt(2.+2*deltaN*deltaL*deltaM));
+        return nk;
+}
+
+// Calculates W to be used for electron repulsion integrals.
+// W(l1, l1p, l2, l2p; kL)
+// Racah function, wikipedia definition equation 24 and 14.
+double W(int l1, int l1p, int l2, int l2p, double k)
+{
+
+    double a1, a2, a3, a4, b1, b2, b3;
+    int L, Lp;
+    double w;
+
+    for(L=abs(l1-l2);i<=(l1+l2);i++)
+    {
+    
+        a1 = l1  + l1p + k;
+        a2 = l2  + l2p + k;
+        a3 = l1  + l2  + L;
+        a4 = l1p + l2p + L;
+    
+        b1 = l1  + l2  + l1p + l2p;
+        b2 = l1  + l2p + k   + L;
+        b3 = l1p + l2  + k   + L;
+
+    // Checks to see if k + l1 + l1p and k + l2 + l2p are even, and value of k is less than l1 + l1p & l2 + l2p.
+    if ( (k+l1+l1p) % 2 == 0 && (k + l2 + l2p) % 2 == 0 && k <= l1 + l1p && k <= l2 + l2p )
+        {
+
+
+
+        }
+
+    else 
+
+       w = 0; 
+
+
+    }
+
+
+
+}
+
+// Equation 23.
+void Fk(int l1, int l2, int l1p, int l2p, double k, int rad)
+{
+
+    double fk;
+    double L, Lp;
+
+// What is big L? What is big M? Constants of motion.
+if ( L =! Lp )
+{
+    fk = 0.;
+}
+else
+    pow()
+
+
+}
+
+
+    
+
 
 
 //  Evaluates Spherical Harmonics at values of theta and phi given
