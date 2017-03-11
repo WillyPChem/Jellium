@@ -3,7 +3,8 @@
 }
 \date{\today}
 
-\documentclass[12pt]{article}
+\documentclass[11pt]{article}
+\usepackage{amsmath}
 
 \begin{document}
 \maketitle
@@ -23,9 +24,123 @@ Each integral is of the form:
 
 where $\phi_a(r_1) =\left(\frac{2}{\pi}\right)^{3/2} {\rm sin}(a_x x_1) {\rm sin}(a_y y_1) {\rm sin}(a_z z_1)$.
 
-Using the trigonometric identity $2 {\rm sin}(a_x x_1) {\rm sin}(b_x x_1) = {\rm cos}((a_x - b_x) x_1) - {\rm cos}((a_x + b_x) x_1)$ leads to the realization that the two electron integrals $(ab|cd)$ can be expanded as linear combinations of integrals of the form 
+Using the trigonometric identity 
+\begin{equation}
+2 {\rm sin}(a_x x_1) {\rm sin}(b_x x_1) = {\rm cos}((a_x - b_x) x_1) - {\rm cos}((a_x + b_x) x_1)
+\end{equation}
+leads to the realization that the two electron integrals $(ab|cd)$ can be expanded as linear combinations of integrals of the form 
 \begin{equation}
 (p|q) = \frac{1}{\pi^6} \int \frac{{\rm cos}(p_x x_1) {\rm cos}(p_y y_1) {\rm cos}(p_z z_1)  {\rm cos}(q_x x_2) {\rm cos}(q_y y_2) {\rm cos}(q_z z_2) }{|r_1 - r_2|} dr_1 dr_2.
+\end{equation}
+
+\begin{equation}
+\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{ry} \text{y2})
+   \cos (\text{pz} \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{rx}
+   \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos
+   (\text{rz} \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1})
+   \cos (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{qx}
+   \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos
+   (\text{pz} \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2})
+   \cos (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz}
+   \text{z2})+\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz}
+   \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz}
+   \text{z2})+\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz}
+   \text{z2})+\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{qx} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz}
+   \text{z2})+\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz}
+   \text{z2})+\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{rz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{rz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{sz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz} \text{z2})-\cos (\text{px} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz}
+   \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{pz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{sz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{sz} \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz}
+   \text{z2})+\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{sz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{ry} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos
+   (\text{py} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{py} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{px} \text{x1})
+   \cos (\text{rx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{sz} \text{z2})-\cos (\text{qx} \text{x1}) \cos (\text{rx} \text{x2}) \cos
+   (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz}
+   \text{z2})-\cos (\text{px} \text{x1}) \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos
+   (\text{sy} \text{y2}) \cos (\text{qz} \text{z1}) \cos (\text{sz} \text{z2})+\cos (\text{qx} \text{x1})
+   \cos (\text{sx} \text{x2}) \cos (\text{qy} \text{y1}) \cos (\text{sy} \text{y2}) \cos (\text{qz}
+   \text{z1}) \cos (\text{sz} \text{z2})
 \end{equation}
 
 
