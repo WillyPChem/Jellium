@@ -1,0 +1,35 @@
+\title{Two electron integrals - Particle in a cube}
+\author{ Jellium Team
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Analytical expressions for two-electron repulsion integrals in particle
+in a cube basis
+\end{abstract}
+
+\section{Introduction}
+Two-electron integrals for particle in a cube:
+
+Each integral is of the form:
+\begin{equation}
+(ab|cd) = \int \frac{ \phi_a(r_1) \phi_b(r_1) \phi_c(r_2) \phi_d(r_2)}{|r_1 - r_2|} dr_1 dr_2
+\end{equation}
+
+where $\phi_a(r_1) =\left(\frac{2}{\pi}\right)^{3/2} {\rm sin}(a_x x_1) {\rm sin}(a_y y_1) {\rm sin}(a_z z_1)$.
+
+Using the trigonometric identity $2 {\rm sin}(a_x x_1) {\rm sin}(b_x x_1) = {\rm cos}((a_x - b_x) x_1) - {\rm cos}((a_x + b_x) x_1)$ leads to the realization that the two electron integrals $(ab|cd)$ can be expanded as linear combinations of integrals of the form 
+\begin{equation}
+(p|q) = \frac{1}{\pi^6} \int \frac{{\rm cos}(p_x x_1) {\rm cos}(p_y y_1) {\rm cos}(p_z z_1)  {\rm cos}(q_x x_2) {\rm cos}(q_y y_2) {\rm cos}(q_z z_2) }{|r_1 - r_2|} dr_1 dr_2.
+\end{equation}
+
+
+%\bibliographystyle{abbrv}
+%\bibliography{main}
+
+\end{document}
