@@ -175,13 +175,22 @@ int main ( int argc, char *argv[] )
   sig[1] = 0;
   sig[2] = 0;
 
-
+  //  Constructe grid and weights, store them to the vectors x and w, respectively.
+  //  This is one of John Burkhardt's library functions
   legendre_compute_glr(n, x, w);
+  // Scale the grid to start at value a and end at value b. 
+  // We want our integration range to go from 0 to 1, so a = 0, b = 1
+  // This is also one of John Burkhardt's library functions
   rescale( a, b, n, x, w);
 
+  // Call a specific instance of the (p|q) integral function, where the
+  // 3d numerical integration is done along the Gauss-Legendre grid produced and scaled in 
+  // the above two functions.  
   printf("  (002|002) is %17.14f\n",pq_int(n, x, w, 0,0,2,0,0,2));
 
   //double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d)
+  // Compute the 2-electron repulsion integrals (mu nu | lam sig) using the quantum
+  // numbers associated with each orbital phi_mu, etc.
   printf("  (1s 2s | 1s 2s ) -> %17.14f\n",ERI( n, x, w, mu, nu, lam, sig));
 
 
@@ -997,6 +1006,12 @@ double g_pq(double p, double q, double x) {
 //              b[]   = array of nx, ny, and nz for orbital b
 //              c[]   = array of nx, ny, and nz for orbital c
 //              d[]   = array of nx, ny, and nz for orbital d
+//  This function computes the ERI (a b | c d) where a, b, c, d are
+//  all associated with three unique quantum numbers (nx, ny, nz)
+//  According to Gill paper, each ERI can be written as a linear combination of (p|q) 
+//  integrals where p is related to (a-b) or (a+b) and q is related to (c-d) or (c+d)
+//  This function automatically enumerates all the appropriate (p|q), computes them, and
+//  accumulates the total... Hopefully it works!
 double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d) {
 
   int i, j, k, l, m, n;
@@ -1083,7 +1098,12 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 
 }
 
-
+// This function implements Eq. 4.7 and 4.8 in Peter Gills paper on 2-electrons in a cube
+// Gauss-Legendre quadrature is used for the 3d integral on the range 0->1 for x, y, and z
+// int dim is the number of points on this grid, double *xa is a vector containing the actual points on this grid, and
+// double *w is a vector containing the weights associated with this grid (analogous to differential length elements
+// in rectangle rule integration).
+// double px, py, pz, qx, qy, qz has the same interpretation as it does in the Gill paper.
 double pq_int(int dim, double *xa, double *w, double px, double py, double pz, double qx, double qy, double qz) {
 
   double sum = 0.;
