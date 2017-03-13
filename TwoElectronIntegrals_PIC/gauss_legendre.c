@@ -158,28 +158,28 @@ int main ( int argc, char *argv[] )
   lam = (double *)malloc(3*sizeof(double));
   sig = (double *)malloc(3*sizeof(double));
 
-  // mu -> 1s orbital
-  // nu -> 2s orbital
-  // lam -> 1s orbital
-  // sig -> 2s orbital
-  mu[0] = 2;
-  mu[1] = 0;
-  mu[2] = 0;
+  // mu -> 1,1,1 orbital
+  // nu -> 1,1,1 orbital
+  // lam -> 1,1,1 orbital
+  // sig -> 1,1,1 orbital
+  mu[0] = 1;
+  mu[1] = 1;
+  mu[2] = 1;
   nu[0] = 1;
-  nu[1] = 0;
-  nu[2] = 0;
-  lam[0] = 2;
-  lam[1] = 0;
-  lam[2] = 0;
+  nu[1] = 1;
+  nu[2] = 1;
+  lam[0] = 1;
+  lam[1] = 1;
+  lam[2] = 1;
   sig[0] = 1;
-  sig[1] = 0;
-  sig[2] = 0;
+  sig[1] = 1;
+  sig[2] = 1;
 
 
   legendre_compute_glr(n, x, w);
   rescale( a, b, n, x, w);
 
-  printf("  (002|002) is %17.14f\n",pq_int(n, x, w, 0,0,2,0,0,2));
+  printf("  (000|000) is %17.14f\n",pq_int(n, x, w, 0,0,0,0,0,0));
 
   //double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d)
   printf("  (1s 2s | 1s 2s ) -> %17.14f\n",ERI( n, x, w, mu, nu, lam, sig));
