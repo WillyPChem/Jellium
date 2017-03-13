@@ -1,69 +1,6 @@
-# include <stdlib.h>
-# include <stdio.h>
-# include <math.h>
-# include <time.h>
+#include"gauss_legendre.h" 
 
-//int main ( int argc, char *argv[] );
-
-// Gauss-Legendre quadrature functions
-void legendre_compute_glr ( int n, double x[], double w[] );
-void legendre_compute_glr0 ( int n, double *p, double *pp );
-void legendre_compute_glr1 ( int n, double *roots, double *ders );
-void legendre_compute_glr2 ( double p, int n, double *roots, double *ders );
-void legendre_handle ( int n, double a, double b );
-void r8mat_write ( char *output_filename, int m, int n, double table[] );
-void rescale ( double a, double b, int n, double x[], double w[] );
-double rk2_leg ( double t, double tn, double x, int n );
-void timestamp ( void );
-double ts_mult ( double *u, double h, int n );
-double wtime ( );
-double pi=4*atan(1.0);
-
-//  Electron integral functions
-double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
-double g_pq(double p, double q, double r);
-double pq_int(int dim, double *x, double *w, double px, double py, double pz, double qx, double qy, double qz);
-
-
-/******************************************************************************/
-
-int main ( int argc, char *argv[] )
-
-/******************************************************************************/
-/*
- *   Purpose:
- *
- *   MAIN is the main program for LEGENDRE_RULE_FAST.
- *
- *   Discussion:
- *
- *   This program computes a Gauss-Legendre quadrature rule
- *   and writes it to a file.
- *
- *   Usage:
- *
- *   legendre_rule_fast n a b
- *
- *    where
- *
- *    * n is the number of points in the rule;
- *    * a is the left endpoint;
- *    * b is the right endpoint.
- *
- *    Licensing:
- *
- *    This code is distributed under the GNU LGPL license. 
- *
- *    Modified:
- *
- *    28 September 2013
- *
- *    Author:
- *
- *    John Burkardt
- */  
-{
-  double a;
+ /*double a;
   double b;
   int n;
 
@@ -87,10 +24,11 @@ int main ( int argc, char *argv[] )
   printf ( "  * leg_oN_w.txt - the weight file\n" );
   printf ( "  * leg_oN_x.txt - the abscissa file.\n" );
   printf ( "  * leg_oN_r.txt - the region file.\n" );
+ */
 /*
  *   Get N.
  *   */
-  if ( 1 < argc )
+/*  if ( 1 < argc )
   {
     n = atoi ( argv[1] );
   }
@@ -102,10 +40,11 @@ int main ( int argc, char *argv[] )
   }
   printf ( "\n" );
   printf ( "  N = %d\n", n );
+*/
 /*
  *   Get A:
  *   */
-  if ( 2 < argc )
+/*  if ( 2 < argc )
   {
     a = atof ( argv[2] );
   }
@@ -117,10 +56,11 @@ int main ( int argc, char *argv[] )
   }
   printf ( "\n" );
   printf ( "  A = %g\n", a );
+*/
 /*
  *   Get B:
  *   */
-  if ( 3 < argc )
+/*  if ( 3 < argc )
   {
     b = atof ( argv[3] );
   }
@@ -132,70 +72,24 @@ int main ( int argc, char *argv[] )
   }
   printf ( "\n" );
   printf ( "  B = %g\n", b );
+*/
 /*
  *   Construct the rule and output it.
  *   */
-  legendre_handle ( n, a, b );
+ // legendre_handle ( n, a, b );
 /*
  *   Terminate.
  *   */
-  printf ( "\n" );
+/*
+ printf ( "\n" );
   printf ( "LEGENDRE_RULE_FAST:\n" );
   printf ( "  Normal end of execution.\n" );
 
   printf ( "\n" );
   timestamp ( );
 
-
-  double *x, *w;
-  double *mu, *nu, *lam, *sig;
-
-  x = (double *)malloc(n*sizeof(double));
-  w = (double *)malloc(n*sizeof(double));
-  
-  mu = (double *)malloc(3*sizeof(double));
-  nu = (double *)malloc(3*sizeof(double));
-  lam = (double *)malloc(3*sizeof(double));
-  sig = (double *)malloc(3*sizeof(double));
-
-  // mu -> 1s orbital
-  // nu -> 2s orbital
-  // lam -> 1s orbital
-  // sig -> 2s orbital
-  mu[0] = 2;
-  mu[1] = 0;
-  mu[2] = 0;
-  nu[0] = 1;
-  nu[1] = 0;
-  nu[2] = 0;
-  lam[0] = 2;
-  lam[1] = 0;
-  lam[2] = 0;
-  sig[0] = 1;
-  sig[1] = 0;
-  sig[2] = 0;
-
-
-  legendre_compute_glr(n, x, w);
-  rescale( a, b, n, x, w);
-
-  printf("  (002|002) is %17.14f\n",pq_int(n, x, w, 0,0,2,0,0,2));
-
-  //double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d)
-  printf("  (1s 2s | 1s 2s ) -> %17.14f\n",ERI( n, x, w, mu, nu, lam, sig));
-
-
-  free(x);
-  free(w);
-  free(mu);
-  free(nu);
-  free(lam);
-  free(sig);
   return 0;
-
-
-
-}
+} */
 /******************************************************************************/
 
 void legendre_compute_glr ( int n, double x[], double w[] )
@@ -963,153 +857,4 @@ double wtime ( void )
   now = ( double ) clock ( ) / ( double ) CLOCKS_PER_SEC; 
 
   return now;
-}
-
-double g_pq(double p, double q, double x) {
-
-  int d;
-  d = (int)(fabs(p-q));
-  double g;
-  g = 0.;
-  if (p == q && p == 0) {
-
-    g = 1 - x;
-
-  }
-  else if ( p == q && p > 0 ) {
-
-    g = (1 - x)*cos(p*pi*x)/2. - sin(p*pi*x)/(2*p*pi);
-
-  }
-  else if ( (d % 2)==0) {
-
-    g = (q*sin(q*pi*x) - p*sin(p*pi*x))/((p*p-q*q)*pi);
-  }
-  else g = 0.;
-
-  return g;
-}
-
-//  Arguments:  dim = number of points for gauss-legendre grid
-//              xa[]  = points on gauss-legendre grid
-//              w[]   = weights from gauss-legendre grid
-//              a[]   = array of nx, ny, and nz for orbital a
-//              b[]   = array of nx, ny, and nz for orbital b
-//              c[]   = array of nx, ny, and nz for orbital c
-//              d[]   = array of nx, ny, and nz for orbital d
-double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d) {
-
-  int i, j, k, l, m, n;
-  double *x1, *x2, *y1, *y2, *z1, *z2;
-  double faci, facj, fack, facl, facm, facn, fac;;
-  //char *cp, *cq, *cr, *cs;
-  double eri_val;
-  static const char *cx1[] = {"px x1", "qx x1"};
-  static const char *cx2[] = {"rx x2", "sx x2"};
-  static const char *cy1[] = {"py y1", "qy y1"};
-  static const char *cy2[] = {"ry y2", "sy y2"};
-  static const char *cz1[] = {"pz z1", "qz z1"};
-  static const char *cz2[] = {"rz z2", "sz z2"};  
-
-
-  x1 = (double *)malloc(3*sizeof(double));
-  x2 = (double *)malloc(3*sizeof(double));
-  y1 = (double *)malloc(3*sizeof(double));
-  y2 = (double *)malloc(3*sizeof(double));
-  z1 = (double *)malloc(3*sizeof(double));
-  z2 = (double *)malloc(3*sizeof(double));
-
-  //x1[0] = ax-bx, x1[1] = ax+bx
-  x1[0] = a[0] - b[0];
-  x1[1] = a[0] + b[0];
-  y1[0] = a[1] - b[1];
-  y1[1] = a[1] + b[1];
-  z1[0] = a[2] - b[2];
-  z1[1] = a[2] + b[2];
-
-  //x1[0] = cx-dx, x1[1] = cx+dx
-  x2[0] = c[0] - d[0];
-  x2[1] = c[0] + d[0];
-  y2[0] = c[1] - d[1];
-  y2[1] = c[1] + d[1];
-  z2[0] = c[2] - d[2];
-  z2[1] = c[2] + d[2];
-
-  double tempval = 0.;
-  eri_val = 0.;
-  // Generate all combinations of phi_a phi_b phi_c phi_d in expanded cosine form
-  for (i=0; i<2; i++) {
-    faci = pow(-1,i);
-    for (j=0; j<2; j++) {
-      facj = pow(-1,j);
-      for (k=0; k<2; k++) {
-        fack = pow(-1,k);
-        for (l=0; l<2; l++) { 
-          facl = pow(-1,l);
-          for (m=0; m<2; m++) {
-            facm = pow(-1,m);
-            for (n=0; n<2; n++) {
-              facn = pow(-1,n);
-   
-              fac = faci*facj*fack*facl*facm*facn;          
-             
-              // Uncomment to see the functions being integrated in each call to pq_int 
-              //printf(" + %f Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] \n",
-              //fac,cx1[n],cx2[m],cy1[l],cy2[k],cz1[j],cz2[i]);
-              // recall pq_int args are -> dim, *xa, *w, px, py, pz, qx, qy, qz
-              // order of indices to get these values is a bit strange, see print statement
-              // for example of ordering!
-              tempval = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
-              printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],tempval);
-              eri_val += fac*tempval;
-              
-
-            }
-          } 
-        }
-      }
-    }
-  }
-
- 
-  free(x1);
-  free(x2);
-  free(y1);
-  free(y2);
-  free(z1);
-  free(z2);
-
-  return eri_val;
-
-}
-
-
-double pq_int(int dim, double *xa, double *w, double px, double py, double pz, double qx, double qy, double qz) {
-
-  double sum = 0.;
-  double num, denom;
-  double x, y, z, dx, dy, dz;
-  double gx, gy, gz;
-  for (int i=0; i<dim; i++) {
-    x = xa[i];
-    dx = w[i];
-    gx = g_pq(px, qx, x);
-    for (int j=0; j<dim; j++) {
-      y = xa[j];
-      dy = w[j];
-      gy = g_pq(py, qy, y);
-      for (int k=0; k<dim; k++) {
-        z = xa[k];
-        dz = w[k];
-        gz = g_pq(pz, qz, z);
-        num = gx*gy*gz;
-        denom = sqrt(x*x+y*y+z*z);
-        sum += (num/denom)*dx*dy*dz;
-        //printf("  sum %f  x %f  y %f  z %f\n",sum, x, y, z);
-      }
-    }
-  }
-
-  return (8./pi)*sum;
-
 }  

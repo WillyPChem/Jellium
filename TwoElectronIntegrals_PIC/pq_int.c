@@ -4,6 +4,7 @@
 #include<stdlib.h>
 #include<complex.h>
 #include<time.h>
+#include"gauss_legendre.h"
 
 double pi=4*atan(1.0);
 
@@ -12,6 +13,27 @@ double pq_int(double px, double py, double pz, double qx, double qy, double qz);
 
 
 int main() {
+  int i, n;
+  double a, b;
+  double *x, *w;
+  n = 320;
+  x = (double *)malloc(n*sizeof(double));
+  w = (double *)malloc(n*sizeof(double));
+
+
+  n = 320;
+  a = 0.;
+  b = 1.;
+
+  legendre_compute_glr(n, x, w);
+  //legendre_compute_glr ( int n, double x[], double w[] )
+
+  rescale ( a, b, n, x, w );
+  for (i=0; i<n; i++) {
+
+    printf("  %12.10f  %12.10f \n",x[i],w[i]);
+
+  }
 
 
   printf("  (1|2) is %f\n",pq_int(0,0,2,0,0,2));
