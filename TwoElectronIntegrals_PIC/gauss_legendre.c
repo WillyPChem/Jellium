@@ -23,7 +23,8 @@ double pi=4*atan(1.0);
 double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
 double g_pq(double p, double q, double r);
 double pq_int(int dim, double *x, double *w, double px, double py, double pz, double qx, double qy, double qz);
-
+double E0_Int(int dim, double *xa, double *w);
+double Vab_Int(int dim, double *xa, double *w, double *a, double *b);
 
 /******************************************************************************/
 
@@ -183,20 +184,23 @@ int main ( int argc, char *argv[] )
   // This is also one of John Burkhardt's library functions
   rescale( a, b, n, x, w);
 
-<<<<<<< HEAD
   printf("  (000|000) is %17.14f\n",pq_int(n, x, w, 0,0,0,0,0,0));
-=======
   // Call a specific instance of the (p|q) integral function, where the
   // 3d numerical integration is done along the Gauss-Legendre grid produced and scaled in 
   // the above two functions.  
   printf("  (002|002) is %17.14f\n",pq_int(n, x, w, 0,0,2,0,0,2));
->>>>>>> af282891a55c0663438a3223ed0187c117b5866c
 
   //double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d)
   // Compute the 2-electron repulsion integrals (mu nu | lam sig) using the quantum
   // numbers associated with each orbital phi_mu, etc.
   printf("  (1s 2s | 1s 2s ) -> %17.14f\n",ERI( n, x, w, mu, nu, lam, sig));
 
+  //double Vab_Int(int dim, double *xa, double *w, double *a, double *b)
+  printf("  (1s | 1s) -> %17.14f\n",Vab_Int(n, x, w, mu, nu));
+
+  // double E0_Int(int dim, double *xa, double *w);
+  printf("  E0 -> %17.14f\n",E0_Int(n, x, w));
+  
 
   free(x);
   free(w);
@@ -1002,6 +1006,72 @@ double g_pq(double p, double q, double x) {
 
   return g;
 }
+
+
+// From Eq. 3.6 in the Peter Gill paper, 
+// the Vab integrals are -1/pi^3 \int (phi_a phi_b )/(|r1 - r2|) dr1 dr2
+// This essentially leads to (p|q) integrals with 
+// px = a_x - b_x
+// py = a_y - b_y
+// pz = a_z - b_z
+// qx = a_x + b_x
+// qy = a_y + b_y
+// qz = a_z + b_z
+// Note the expansion of the trigonetric identity:
+// Cos[px x1] Cos[py y1] Cos[pz z1] - Cos[qx x1] Cos[py y1] Cos[pz z1] - 
+// Cos[px x1] Cos[qy y1] Cos[pz z1] + Cos[qx x1] Cos[qy y1] Cos[pz z1] -
+// Cos[px x1] Cos[py y1] Cos[qz z1] + 
+// Cos[qx x1] Cos[py y1] Cos[qz z1] + Cos[px x1] Cos[qy y1] Cos[qz z1] -
+// Cos[qx x1] Cos[qy y1] Cos[qz z1]
+// In order to be consistent with the defintiion of the (p|q) integrals, 
+// the term Cos[px x1] Cos[py y1] Cos[pz z1] -> Cos[px x1] Cos[py y1] Cos[pz z1] Cos[0 x2] Cos[0 y2] Cos[0 z2]
+// In terms of how the pq_int function is called for the above integral, it should be
+// pq_int(dim, xa, w, px, py, pz, 0, 0, 0)
+
+double Vab_Int(int dim, double *xa, double *w, double *a, double *b){
+  double px, py, pz, qx, qy, qz;
+  double Vab;
+  px = a[0] - b[0];
+  py = a[1] - b[1];
+  pz = a[2] - b[2];
+  qx = a[0] + b[0];
+  qy = a[1] + b[1];
+  qz = a[2] + b[2];
+
+  Vab = 0.;
+  // Cos[px x1] Cos[py y1] Cos[pz z1]
+  Vab += pq_int(dim, xa, w, px, py, pz, 0, 0, 0);
+  // - Cos[qx x1] Cos[py y1] Cos[pz z1]
+  Vab -= pq_int(dim, xa, w, 0,  py, pz, qx,0, 0);
+  // - Cos[px x1] Cos[qy y1] Cos[pz z1]
+  Vab -= pq_int(dim, xa, w, px, 0, pz, 0, qy, 0);
+  // + Cos[qx x1] Cos[qy y1] Cos[pz z1]
+  Vab += pq_int(dim, xa, w, 0, 0, pz, qx, qy, 0);   
+  // -Cos[px x1] Cos[py y1] Cos[qz z1]  
+  Vab -= pq_int(dim, xa, w, px, py, 0, 0, 0, qz);
+  // +Cos[qx x1] Cos[py y1] Cos[qz z1] 
+  Vab += pq_int(dim, xa, w, 0, py, 0, qx, 0, qz);
+  // + Cos[px x1] Cos[qy y1] Cos[qz z1]
+  Vab += pq_int(dim, xa, w, px, 0, 0, 0, qy, qz);
+  // -Cos[qx x1] Cos[qy y1] Cos[qz z1]
+  Vab -= pq_int(dim, xa, w, 0, 0, 0, qx, qy, qz);
+
+  return -Vab/(pi*pi*pi);
+
+}
+
+// the E integral is 1/pi^6 \int 1/(|r1 - r2|) dr1 dr2
+// which is equivalent to 
+// 1/pi^6 \int cos(0 x1) cos(0 y1) cos(0 z1) cos(0 x2) cos(0 y2) cos(0 z2)/|r1-r2| dr1 dr2
+//
+double E0_Int(int dim, double *xa, double *w) {
+  double Eint;
+
+  Eint = pq_int(dim, xa, w, 0, 0, 0, 0, 0, 0);
+  return Eint/(pow(pi,6));
+
+}
+
 
 //  Arguments:  dim = number of points for gauss-legendre grid
 //              xa[]  = points on gauss-legendre grid
