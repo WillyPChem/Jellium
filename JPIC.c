@@ -139,6 +139,10 @@ int main()
     // Diagonalize overlap matrix
     DIAG_N(dim, dim, S, Svals, Svecs);
 
+    // Cannot diagonalize here, fortran code dependency???
+
+    
+
 
 
 

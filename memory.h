@@ -1,7 +1,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include<malloc.h>
+#include</System/Library/Frameworks/Kernel.framework/Versions/A/Headers/sys/malloc.h>
 #include</usr/include/complex.h>
 #include<assert.h>
 #include<stdio.h>
