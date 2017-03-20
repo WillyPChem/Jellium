@@ -36,6 +36,7 @@ void OrderPsis(int norbs, int *E, int **MO);
 double prefac(int m, int l);
 double factorial(int n);
 double plgndr(int l, int m, double x);
+double ElectronRepulsionIntegral(double R, double r, int n1, int l1, int n2, int l2);
 
 //Basic Parameters
 int nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
@@ -116,6 +117,11 @@ int main()
     mval = (int *)malloc(nmax*nmax*nmax*sizeof(int));
     AO = (double *)malloc(3*nmax*nmax*nmax*sizeof(double)); // Atomic Orbital Energy Matrix
 
+    NPOrb_x = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+    NPOrb_y = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+    NPOrb_z = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+    NPOrbE = (int *)malloc(nmax*nmax*nmax*sizeof(int));
+
 
     // Calculate AO energies
     //
@@ -127,7 +133,30 @@ int main()
 
     // Determine two electron integrals
     //
-    void ElectronRepulsionIntegral();
+    idx = 0;
+    jdx = 0;
+
+    // Need to define arrays to determine collective psi's.
+
+    for(idx = 0; i<=nmax; idx++)
+    {
+        for(jdx=0; j<=nmax; jdx++)
+        {
+
+        max = 1000;
+
+        dr = R/max;
+        r = dr*idx;
+
+        double eri = ElectronRepulsionIntegral(L, r, n[idx],l[idx],n[jdx],l[jdx]);
+
+        printf(" n1=%i l1=%i n2=%i l2=%i eri=%f\n",n[idx],l[idx],n[jdx],l[jdx],eri);
+        
+        }
+    }
+
+    // 
+
     
     
 
@@ -140,6 +169,75 @@ int main()
 / Function to Determine Energy Calculation
 / Take function and loop through n to keep all atomic orbital energy levels.
 */
+
+
+void OrderCubicBasis() 
+{
+    int nx, ny, nz;
+    int idx, l;
+
+    // variables to use for ordering orbitals in increasing energy.
+    int cond, Ecur, swap, c, d;
+
+    idx = 0;
+
+    for(nx=0; nx<nmax; nx++)
+    {
+        for(ny=0; ny<nmax; ny++)
+        {
+            for(nz=0; nz<nmax; nz++)
+            {
+                idx = nx*nmax*nmax + ny*nmax + nz;
+                l = (nx+1)*(nx+1) + (ny+1)*(ny+1) + (nz+1)*(nz+1);
+                NPOrbE[idx] = l;
+
+            }
+        }
+    }
+
+    for(c=0; c < (nmax*nmax*nmax-1); c++)
+    {
+        for(d=0; d < (nmax*nmax*nmax-c-1); d++)
+        {
+            if (NPOrbE[d] > NPOrbE[d+1]) 
+            {
+                swap = NPOrbE[d];
+                NPOrbE = NPOrbE[d+1];
+                NPOrbE[d+1] = swap;
+            }
+        }
+    }
+
+    c=0;
+    do 
+    {
+        Ecur = NPOrbE[c];
+        nx = 0;
+        do 
+        {
+            nx++;
+            ny=0;
+            do 
+            {
+                ny++;
+                nz=0;
+                do 
+                {
+                    nz++;
+                    cond = Ecur-(nx*nx + ny*ny + nz*nz);
+
+                    if (cond == 0)
+                    {
+                        NPOrb_x[c] = nx;
+                        NPOrb_y[c] = ny;
+                        NPOrb_z[c] = nz;
+                        c++;
+                    }
+                } while (Ecur == NPOrbE[c] && nz<nmax);
+            } while (Ecur == NPOrbE[c] && ny<nmax);
+        } while (Ecur == NPOrbE[c] && nx<nmax);
+    } while (c<nmax*nmax*nmax);
+}
 
 void Phi(double R, int nmin, int nmax, int lmin, int lmax, double *T)
 {
@@ -173,14 +271,23 @@ void AtomicOrbitalOverlap(double *A)
         printf(" ao is %f\n",A[1]);
 
 }
+//  Big R is radius of the particle, little r is current value of r variable
+//  Function returns value of the function at r
+//double Bessel(double R, double r, int n, int l) {
+double ElectronRepulsionIntegral(double R, double r, int n1, int l1, int n2, int l2)
 
-void ElectronRepulsionIntegral()
+{
+   
+   return Bessel(R, r, n1, l1) * Bessel(R, r, n2, l2);
+    
+}
+
+
+double CubicBasis()
 
 {
 
-
-
-
+    // determine this how??
 
 }
 
@@ -233,19 +340,16 @@ double W(int l1, int l1p, int l2, int l2p, double k)
         b3 = l1p + l2  + k   + L;
 
     // Checks to see if k + l1 + l1p and k + l2 + l2p are even, and value of k is less than l1 + l1p & l2 + l2p.
-    if ( (k+l1+l1p) % 2 == 0 && (k + l2 + l2p) % 2 == 0 && k <= l1 + l1p && k <= l2 + l2p )
+   /* if ( (k+l1+l1p) % 2 == 0 && (k + l2 + l2p) % 2 == 0 && k <= l1 + l1p && k <= l2 + l2p )
         {
-
-
 
         }
 
     else 
 
        w = 0; 
-
-
-    }
+*/
+    } 
 
 
 
@@ -259,13 +363,10 @@ void Fk(int l1, int l2, int l1p, int l2p, double k, int rad)
     double L, Lp;
 
 // What is big L? What is big M? Constants of motion.
-if ( L =! Lp )
+if ( L != Lp )
 {
     fk = 0.;
 }
-else
-    pow()
-
 
 }
 
