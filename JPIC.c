@@ -24,13 +24,13 @@ double L, mass, hbar;
 int DIAG_N(int dim, int number, double *mat, double *en, double *wfn);
 void Diagonalize(double*M,long int dim, double*eigval,double*eigvec);
 void print_matrix( char* desc, int m, int n, double* a, int lna);
+void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c);
 
 // Custom cubic HF functions
 void CubicPhi();
 void AtomicOrbitalOverlap();
 void KineticEnergyIntegrals();
 void CrawdadFormat();
-
 
 //Basic Parameters
 int nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
@@ -40,11 +40,12 @@ int ncis, nstates; // ncis is total # of single excited configurations, nstates 
 // Relevant Hartree Fock Variables
 
 double enuc;
-double *S, *Svals, *Svecs;
+double *S, *Svals, *Svecs, *sqrtS;
 double *T;
 double *Hcore;
 double *E, *E1, *E2;
 double *A;
+double *lambdasqrt, *temp, *Fock;
 
 int *NPOrbE, *NPOrb_x, *NPOrb_y, *NPOrb_z;
 
@@ -81,8 +82,7 @@ int main()
             ntotal += 9;
         }
     }
-    // -------------------------------------------------------
-    
+    // ------------------------------------------------------- 
     
     // Continue definition of basic parameters
     nocc = nelec / 2.;
@@ -116,6 +116,10 @@ int main()
     A = (double *)malloc(nmax*nmax*nmax*sizeof(double)); // Atomic Orbital Integrals
     T = (double *)malloc(nmax*nmax*nmax*sizeof(double)); // Kinetic Energy Integrals
 
+    lambdasqrt = (double *)malloc(dim*dim*sizeof(double));
+    SqrtS = (double *)malloc(dim*dim*sizeof(double)); // Sqrt S matrix
+    temp  = (double *)malloc(dim*dim*sizeof(double)); // Temp matrix
+    Fock  = (double *)malloc(dim*dim*sizeof(double)); // Fock matrix
 
     // Calculate AO energies
     // ---------------------
@@ -131,7 +135,6 @@ int main()
     // ----------------------
     print_matrix("Hcore", dim, dim, Hcore, dim);
 
-
     // Define S matrix
     // ---------------
     print_matrix(" S ", dim, dim, S, dim);
@@ -141,10 +144,24 @@ int main()
 
     // Cannot diagonalize here, fortran code dependency???
 
-    
+    for (i = 0; i<dim; i++)
+    {
+        lambdasqrt[i*dim+i] = pow(Svals[i],-0.5);
+        printf(" %12.10f\n",lambdasqrt[i*dim+i]);
+    }
 
+    print_matrix(" lambdasqrt ", dim, dim, lambdasqrt, dim);
 
+    LoopMM(dim, lambdasqrt, "n", Svecs, "t", temp);
 
+    LoopMM(dim, Svecs, "n", temp, "n", sqrtS);
+    print_matrix( "S^1/2", dim, dim, sqrtS, dim);
+
+    LoopMM(dim, Hcore, "n", sqrtS, "n", temp);
+    LoopMM(dim, sqrtS, "n", temp, "n", Fock);
+    print_matrix(" Fock ", dim, dim, Fock, dim);
+
+    // Continue from here...
 
 }
 
@@ -393,6 +410,35 @@ void Diagonalize(double*M,long int dim, double*eigval,double*eigvec){
   free(work);
 }
 
+void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c) {
+  int i, j, k; 
+  double sum;
+
+  for (i=0; i<dim; i++) {
+    for (j=0; j<dim; j++) {
+  
+      sum = 0.;
+      for (k=0; k<dim; k++) {
+
+        if (strcmp(transa,"t")==0 && strcmp(transb,"t")==0) {
+          sum += a[k*dim+i]*b[j*dim+k];  
+        }
+
+        else if (strcmp(transa,"n")==0 && strcmp(transb,"t")==0) {
+          sum += a[i*dim+k]*b[j*dim+k];
+        }
+        else if (strcmp(transa,"t")==0 && strcmp(transb,"n")==0) {
+          sum += a[k*dim+i]*b[k*dim+j];
+        }
+        else {
+          sum += a[i*dim+k]*b[k*dim+j];
+        }
+        
+      }
+      c[i*dim+j] = sum;
+    }
+  }
+}
 
 
 
