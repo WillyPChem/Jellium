@@ -5,10 +5,13 @@ Hartree Fock is variational method to determine best guess molecular orbitals th
 Our code does the following right now:
 - Determines corresponding phi values for nx, ny and nz's based on nmax. // (ex: Phi(0) = nx=1, ny=1, nz=1).
 - Calculates the atomic orbitals based on nmax. // (if Phi() and Phi()* are same n, AO = 1. if not, then 0.)
-- Spits out KE integrals based on nmax. // (I think this needs revision) Phi() x KE x Phi() same as AO calculations.
-- Creates initial S matrix and Hcore matrix corresponding to crawdad tutorial. 
+- Spits out kinetic energy integrals based on nmax. // (I think this needs revision) Phi() x KE x Phi() same as AO calculations.
+- Creates initial S (atomic orbital) matrix and Hcore matrix corresponding to crawdad tutorial. 
 - Attempts to build initial Guess matrix.
 - Skeleton for Two electron integral is in place, but not tested yet.
+
+
+- Looking @ the Crawdad tutorial, our code follows same naming conventions for relevant matricies. So Hcore in Crawdad is Hcore in ours. T is the same, S is the same, etc. F is Fock matrix.
 
 Phys Chem II Project Code Steps:
 
