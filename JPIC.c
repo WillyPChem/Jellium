@@ -191,12 +191,13 @@ int main()
     // Step #4: Build the Orthogonalization Matrix
     //---------------------------------------------------------------------------
 
-    /*
+    
 
     // Diagonalize overlap matrix
     DIAG_N(dim, dim, S, Svals, Svecs);
 
     // Cannot diagonalize here, fortran code dependency???
+    // Works in linux...
 
     for (i = 0; i<dim; i++)
     {
@@ -226,7 +227,7 @@ int main()
 
     // Continue from here...
 
-  */
+  
 
 }
 
