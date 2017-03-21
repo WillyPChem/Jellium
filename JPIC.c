@@ -10,7 +10,7 @@
 #include<cmath>
 #include<math.h>
 #include<stdlib.h>
-#include"blas.h"
+//#include"blas.h"
 #include</System/Library/Frameworks/Kernel.framework/Versions/A/Headers/sys/malloc.h>
 #include</usr/include/complex.h>
 #include<time.h>
@@ -32,6 +32,11 @@ void AtomicOrbitalOverlap();
 void KineticEnergyIntegrals();
 void CrawdadFormat();
 
+// Peter Gill Two Electron Repulsion Integral 
+double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
+// Revised Version to fit HF code.
+void TwoERICalc();
+
 //Basic Parameters
 int nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
 int nocc, nuno; // nocc = number of occupied orbitals, which is total # of electrons / 2, with 2 electrons per orbital. // nuno is remaining unoccupied orbitals.
@@ -47,7 +52,16 @@ double *E, *E1, *E2;
 double *A;
 double *lambdasqrt, *temp, *Fock;
 
+// Phi Variables
+
 int *NPOrbE, *NPOrb_x, *NPOrb_y, *NPOrb_z;
+
+// Two Electron Repulsion Integral Variables
+
+double *adim, *bdim, *cdim, *ddim;
+double *ERIa, *ERIb, *ERIc, *ERId;
+double *x, *w;
+int n;
 
 int main()
 
@@ -117,9 +131,36 @@ int main()
     T = (double *)malloc(nmax*nmax*nmax*sizeof(double)); // Kinetic Energy Integrals
 
     lambdasqrt = (double *)malloc(dim*dim*sizeof(double));
-    SqrtS = (double *)malloc(dim*dim*sizeof(double)); // Sqrt S matrix
+    sqrtS = (double *)malloc(dim*dim*sizeof(double)); // Sqrt S matrix
     temp  = (double *)malloc(dim*dim*sizeof(double)); // Temp matrix
     Fock  = (double *)malloc(dim*dim*sizeof(double)); // Fock matrix
+
+    // Initialize 2eri arrays
+    adim = (double *)malloc(3*sizeof(double));
+    bdim = (double *)malloc(3*sizeof(double));
+    cdim = (double *)malloc(3*sizeof(double));
+    ddim = (double *)malloc(3*sizeof(double));
+
+    // Storage of 2eri values after ERI function.
+    ERIa = (double *)malloc(dim*dim*sizeof(double));
+    ERIb = (double *)malloc(dim*dim*sizeof(double));
+    ERIc = (double *)malloc(dim*dim*sizeof(double));
+    ERId = (double *)malloc(dim*dim*sizeof(double));
+    teri = (double *)malloc(dim*dim*sizeof(double));
+
+    n = 320;
+    x = (double *)malloc(n*sizeof(double)); 
+    w = (double *)malloc(n*sizeof(double));
+
+    //---------------------------------------------------------------------------
+    // Step #1: Nuclear Repulsion Energy
+    //---------------------------------------------------------------------------
+
+    // Considered a constant. Can skip this for now?
+
+    //---------------------------------------------------------------------------
+    // Step #2: AO-Overlap, KE Integrals, Building of Hcore.
+    //--------------------------------------------------------------------------- 
 
     // Calculate AO energies
     // ---------------------
@@ -139,6 +180,19 @@ int main()
     // ---------------
     print_matrix(" S ", dim, dim, S, dim);
 
+    //---------------------------------------------------------------------------
+    // Step #3: Two-Electron Repulsion Integrals
+    //---------------------------------------------------------------------------
+
+    // Peter Gill Gaussian Legendre formatted for our code. Needs to be tested..
+    TwoERICalc();
+
+    //---------------------------------------------------------------------------
+    // Step #4: Build the Orthogonalization Matrix
+    //---------------------------------------------------------------------------
+
+    /*
+
     // Diagonalize overlap matrix
     DIAG_N(dim, dim, S, Svals, Svecs);
 
@@ -150,18 +204,29 @@ int main()
         printf(" %12.10f\n",lambdasqrt[i*dim+i]);
     }
 
+
+
     print_matrix(" lambdasqrt ", dim, dim, lambdasqrt, dim);
 
     LoopMM(dim, lambdasqrt, "n", Svecs, "t", temp);
 
     LoopMM(dim, Svecs, "n", temp, "n", sqrtS);
+
     print_matrix( "S^1/2", dim, dim, sqrtS, dim);
 
     LoopMM(dim, Hcore, "n", sqrtS, "n", temp);
+
     LoopMM(dim, sqrtS, "n", temp, "n", Fock);
+
     print_matrix(" Fock ", dim, dim, Fock, dim);
 
+    DIAG_N(dim, dim, Fock, Fvals, Fvecs);
+
+    LoopMM(dim, sqrtS, "n", )
+
     // Continue from here...
+
+  */
 
 }
 
@@ -232,7 +297,8 @@ void KineticEnergyIntegrals()
 }
 
 
-// Complex conjugate of phi(x) * phi(y) integrated over -infty to infty = 1 when x == y and 0 otherwise
+// Complex conjugate of phi(x) * phi(y) integrated over -infty to infty = 1 when x == y and 0 otherwise.
+// Anyway, this is confusing. Thought phi(x) = sqrt(2./L)sin(pi*n*x/L) ?? Well.. thats the energy eigenfunction. Right?
 void AtomicOrbitalOverlap()
 {
     int i,j,imax,z;
@@ -353,6 +419,8 @@ void print_matrix( char* desc, int m, int n, double* a, int lna ) {
         printf("----------------------\n\n");
 }
 
+
+
 int DIAG_N(int dim, int number, double *mat, double *en, double *wfn) {
   int i,j,ind, state_max, count;
   double *pacMat, *eigval, *eigvec;
@@ -390,7 +458,7 @@ int DIAG_N(int dim, int number, double *mat, double *en, double *wfn) {
 
 }
 
-void Diagonalize(double*M,long int dim, double*eigval,double*eigvec){
+ void Diagonalize(double*M,long int dim, double*eigval,double*eigvec){
   integer one,info,edim,fdim,*ifail,tdim,i,il,iu,m;
   doublereal zero,vl,vu;
   doublereal tol;
@@ -408,7 +476,7 @@ void Diagonalize(double*M,long int dim, double*eigval,double*eigvec){
 
   //for (i=0; i<dim; i++) printf("  Eig %i  %12.10f\n",i+1,eigval[i]);
   free(work);
-}
+} 
 
 void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c) {
   int i, j, k; 
@@ -438,6 +506,152 @@ void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c
       c[i*dim+j] = sum;
     }
   }
+} 
+
+// Need to loop through all phi's. 4 orbitals, so 4 for loops.
+
+void TwoERICalc()
+{
+    int a,b,c,d;
+
+    for(a=0; a<NPOrbE[dim]; a++)
+    {
+        for(b=0; b<NPOrb_E[dim]; b++)
+        {
+            for(c=0; c<NPOrb_E[dim]; c++)
+            {
+                for(d=0; d<NPOrb_E[dim]; d++)
+                {
+
+                    // Assign phi nx, ny & nz values for ERI format.
+
+                    adim[0] = NPOrb_x[a];
+                    adim[1] = NPOrb_y[a];
+                    adim[2] = NPOrb_z[a];
+
+                    bdim[0] = NPOrb_x[b];
+                    bdim[1] = NPOrb_y[b];
+                    bdim[2] = NPOrb_z[b];
+
+                    cdim[0] = NPOrb_x[c];
+                    cdim[1] = NPOrb_y[c];
+                    cdim[2] = NPOrb_z[c];
+
+                    ddim[0] = NPOrb_x[d];
+                    ddim[1] = NPOrb_y[d];
+                    ddim[2] = NPOrb_z[d];
+
+                    // Store ERI for values in teri array & coords.
+
+                    ERIa[a] = a;
+                    ERIb[a] = b;
+                    ERIc[a] = c;
+                    ERId[a] = d;
+                    teri[a] = ERI(n, *x, *w, *adim, *bdim, *cdim, *ddim);
+
+                }
+            }
+        }
+    }
+}
+
+//  Arguments:  dim = number of points for gauss-legendre grid
+//              xa[]  = points on gauss-legendre grid
+//              w[]   = weights from gauss-legendre grid
+//              a[]   = array of nx, ny, and nz for orbital a
+//              b[]   = array of nx, ny, and nz for orbital b
+//              c[]   = array of nx, ny, and nz for orbital c
+//              d[]   = array of nx, ny, and nz for orbital d
+//  This function computes the ERI (a b | c d) where a, b, c, d are
+//  all associated with three unique quantum numbers (nx, ny, nz)
+//  According to Gill paper, each ERI can be written as a linear combination of (p|q) 
+//  integrals where p is related to (a-b) or (a+b) and q is related to (c-d) or (c+d)
+//  This function automatically enumerates all the appropriate (p|q), computes them, and
+//  accumulates the total... Hopefully it works!
+double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d) {
+
+  int i, j, k, l, m, n;
+  double *x1, *x2, *y1, *y2, *z1, *z2;
+  double faci, facj, fack, facl, facm, facn, fac;;
+  //char *cp, *cq, *cr, *cs;
+  double eri_val;
+  static const char *cx1[] = {"px x1", "qx x1"};
+  static const char *cx2[] = {"rx x2", "sx x2"};
+  static const char *cy1[] = {"py y1", "qy y1"};
+  static const char *cy2[] = {"ry y2", "sy y2"};
+  static const char *cz1[] = {"pz z1", "qz z1"};
+  static const char *cz2[] = {"rz z2", "sz z2"};  
+
+
+  x1 = (double *)malloc(3*sizeof(double));
+  x2 = (double *)malloc(3*sizeof(double));
+  y1 = (double *)malloc(3*sizeof(double));
+  y2 = (double *)malloc(3*sizeof(double));
+  z1 = (double *)malloc(3*sizeof(double));
+  z2 = (double *)malloc(3*sizeof(double));
+
+  //x1[0] = ax-bx, x1[1] = ax+bx
+  x1[0] = a[0] - b[0];
+  x1[1] = a[0] + b[0];
+  y1[0] = a[1] - b[1];
+  y1[1] = a[1] + b[1];
+  z1[0] = a[2] - b[2];
+  z1[1] = a[2] + b[2];
+
+  //x1[0] = cx-dx, x1[1] = cx+dx
+  x2[0] = c[0] - d[0];
+  x2[1] = c[0] + d[0];
+  y2[0] = c[1] - d[1];
+  y2[1] = c[1] + d[1];
+  z2[0] = c[2] - d[2];
+  z2[1] = c[2] + d[2];
+
+  double tempval = 0.;
+  eri_val = 0.;
+  // Generate all combinations of phi_a phi_b phi_c phi_d in expanded cosine form
+  for (i=0; i<2; i++) {
+    faci = pow(-1,i);
+    for (j=0; j<2; j++) {
+      facj = pow(-1,j);
+      for (k=0; k<2; k++) {
+        fack = pow(-1,k);
+        for (l=0; l<2; l++) { 
+          facl = pow(-1,l);
+          for (m=0; m<2; m++) {
+            facm = pow(-1,m);
+            for (n=0; n<2; n++) {
+              facn = pow(-1,n);
+   
+              fac = faci*facj*fack*facl*facm*facn;          
+             
+              // Uncomment to see the functions being integrated in each call to pq_int 
+              //printf(" + %f Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] \n",
+              //fac,cx1[n],cx2[m],cy1[l],cy2[k],cz1[j],cz2[i]);
+              // recall pq_int args are -> dim, *xa, *w, px, py, pz, qx, qy, qz
+              // order of indices to get these values is a bit strange, see print statement
+              // for example of ordering!
+              tempval = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
+              printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],tempval);
+              eri_val += fac*tempval;
+              
+
+            }
+          } 
+        }
+      }
+    }
+  }
+
+ 
+  free(x1);
+  free(x2);
+  free(y1);
+  free(y2);
+  free(z1);
+  free(z2);
+
+  return eri_val;
+
 }
 
 
