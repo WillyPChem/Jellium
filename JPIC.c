@@ -8,10 +8,11 @@
 #include<cmath>
 #include<math.h>
 #include<stdlib.h>
-//#include"blas.h"
-#include</System/Library/Frameworks/Kernel.framework/Versions/A/Headers/sys/malloc.h>
-#include</usr/include/complex.h>
+#include"blas.h"
+#include<malloc.h>
+#include<complex.h>
 #include<time.h>
+#include<string.h>
 
 int i,j,pi;
 int dim;
@@ -24,9 +25,10 @@ FILE *enucfp, *overlap, *nucatt, *ekin;
 double val, enuc, *Sc, *Vc, *Tc, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fockc, *squarerootS, *temporary;
 double *eps, *Cp, *C, *D, sum, Eelec;
 int ij,kl;
-
+double *Svals, *Svecs, *SqrtSvals, *SqrtS;
 
 // Relevant HF functions
+void BuildDensity(int dim, int occ, double *C, double *D);
 int DIAG_N(int dim, int number, double *mat, double *en, double *wfn);
 void Diagonalize(double*M,long int dim, double*eigval,double*eigvec);
 void print_matrix( char* desc, int m, int n, double* a, int lna);
@@ -50,7 +52,7 @@ int ncis, nstates; // ncis is total # of single excited configurations, nstates 
 
 // Relevant Hartree Fock Variables
 
-double *S, *Svals, *Svecs, *sqrtS;
+double *S, *sqrtS;
 double *T;
 double *Hcore;
 double *E, *E1, *E2;
@@ -88,7 +90,7 @@ int main()
     dim = 7;
 
     // Number of electrons in system.
-    nelec = 4; 
+    nelec = 5; 
    
     // total number of orbitals... note we are limiting l<=2 in this case (s, p, and d orbs)
 
@@ -175,6 +177,11 @@ int main()
         Cp = (double *)malloc(dim*dim*sizeof(double));
         C = (double *)malloc(dim*dim*sizeof(double));
         D = (double *)malloc(dim*dim*sizeof(double));
+	
+	Svals = (double *)malloc(dim*sizeof(double));
+	SqrtSvals = (double *)malloc(dim*dim*sizeof(double));
+	Svecs = (double *)malloc(dim*dim*sizeof(double));
+	SqrtS = (double *)malloc(dim*dim*sizeof(double));	
 
     //---------------------------------------------------------------------------
     // Step #1: Nuclear Repulsion Energy
@@ -222,8 +229,40 @@ int main()
 
     }
 }
-
+	DIAG_N(dim, dim, Sc, Svals, Svecs);
         
+	for (i=0; i<dim; i++) 
+	{
+    SqrtSvals[i*dim + i] = pow(Svals[i],-1./2);
+	}
+
+	print_matrix("Hcore", dim, dim, Hcorec, dim);
+
+      // Form S^{-1/2} = L_S s^{-1/2} L_S^t
+	 LoopMM(dim, SqrtSvals, "n", Svecs, "t", temp);
+	 LoopMM(dim, Svecs, "n", temp, "n", SqrtS);
+
+	print_matrix(" S^-1/2 ", dim, dim, SqrtS, dim);
+      
+	// Form Fock matrix F = S^{-1/2}^t H_core S^{1/2}
+	LoopMM(dim, Hcorec, "n", SqrtS, "n", temp);
+	LoopMM(dim, SqrtS, "t", temp, "n", Fock);
+	print_matrix("  Fock", dim, dim, Fock, dim);
+
+	// Get Guess MO matrix from diagnoalizing Fock matrix
+	DIAG_N(dim, dim, Fock, eps, Cp);
+	print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
+
+	LoopMM(dim, SqrtS, "n", Cp, "n", C);
+
+	// Build initial density matrix
+	BuildDensity(dim, nelec, C, D);
+	print_matrix("  Coefficients", dim, dim, C, dim);
+	print_matrix("  Density Matrix", dim, dim, D, dim);
+
+	ESCF_i = E_Total(dim, D, Hcore, F, Enuc);
+	printf("  Initial E_SCF is %12.10f\n",ESCF);
+
 
     //---------------------------------------------------------------------------
     // Step #2: AO-Overlap, KE Integrals, Building of Hcore.
@@ -241,7 +280,7 @@ int main()
 
   // Print Hamiltonian Core
     // ----------------------
-    print_matrix("Hcore", dim, dim, Hcorec, dim);
+  //  print_matrix("Hcore", dim, dim, Hcorec, dim);
 
     // Define S matrix
     // ---------------
@@ -516,7 +555,7 @@ void print_matrix( char* desc, int m, int n, double* a, int lna ) {
         printf("----------------------\n\n");
 }
 
-/*
+
 
 int DIAG_N(int dim, int number, double *mat, double *en, double *wfn) {
   int i,j,ind, state_max, count;
@@ -604,6 +643,8 @@ void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c
     }
   }
 } 
+
+/*
 
 // Need to loop through all phi's. 4 orbitals, so 4 for loops.
 void TwoERICalc()
@@ -769,4 +810,32 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 } */    
 
 
+void BuildDensity(int dim, int occ, double *C, double *D) {
+  int i, j, m;
+  double sum;
 
+  for (i=0; i<dim; i++) {
+    for (j=0; j<dim; j++) {
+      sum = 0.;
+      for (m=0; m<occ; m++) {
+        sum += C[i*dim+m]*C[j*dim+m];
+      }
+      D[i*dim+j] = sum;
+    }
+  }
+}
+
+double E_Total(int dim, double *D, double *Hc, double *F, double Enuc) {
+
+  int m, n;  
+  double sum;
+
+  sum = 0.;
+  for (m=0; m<dim; m++) {
+    for (n=0; n<dim; n++) {
+      sum += D[m*dim+n]*(Hc[m*dim+n] + F[m*dim+n]);
+            sum += D[m*dim+n]*(Hc[m*dim+n] + F[m*dim+n]);
+                }
+                  }
+                    return sum + Enuc;
+                    }
