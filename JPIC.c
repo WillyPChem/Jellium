@@ -162,21 +162,21 @@ int main()
 
 
     // HF H2O INFO
-        Sc = (double *)malloc(dim*dim*sizeof(double));
-        Tc = (double *)malloc(dim*dim*sizeof(double));
-        Vc = (double *)malloc(dim*dim*sizeof(double));
-        Hcorec = (double *)malloc(dim*dim*sizeof(double));
-        lambda = (double *)malloc(dim*sizeof(double));
-        lambdasquareroot = (double *)malloc(dim*dim*sizeof(double));
-        Ls       = (double *)malloc(dim*dim*sizeof(double));
-        Fockc     = (double *)malloc(dim*dim*sizeof(double));
-        squarerootS = (double *)malloc(dim*dim*sizeof(double));
-        temporary = (double *)malloc(dim*dim*sizeof(double));
+    Sc = (double *)malloc(dim*dim*sizeof(double));
+    Tc = (double *)malloc(dim*dim*sizeof(double));
+    Vc = (double *)malloc(dim*dim*sizeof(double));
+    Hcorec = (double *)malloc(dim*dim*sizeof(double));
+    lambda = (double *)malloc(dim*sizeof(double));
+    lambdasquareroot = (double *)malloc(dim*dim*sizeof(double));
+    Ls       = (double *)malloc(dim*dim*sizeof(double));
+    Fockc     = (double *)malloc(dim*dim*sizeof(double));
+    squarerootS = (double *)malloc(dim*dim*sizeof(double));
+    temporary = (double *)malloc(dim*dim*sizeof(double));
 
-        eps = (double *)malloc(dim*sizeof(double));
-        Cp = (double *)malloc(dim*dim*sizeof(double));
-        C = (double *)malloc(dim*dim*sizeof(double));
-        D = (double *)malloc(dim*dim*sizeof(double));
+    eps = (double *)malloc(dim*sizeof(double));
+    Cp = (double *)malloc(dim*dim*sizeof(double));
+    C = (double *)malloc(dim*dim*sizeof(double));
+    D = (double *)malloc(dim*dim*sizeof(double));
 	
 	Svals = (double *)malloc(dim*sizeof(double));
 	SqrtSvals = (double *)malloc(dim*dim*sizeof(double));
@@ -260,7 +260,7 @@ int main()
 	print_matrix("  Coefficients", dim, dim, C, dim);
 	print_matrix("  Density Matrix", dim, dim, D, dim);
 
-	ESCF_i = E_Total(dim, D, Hcore, F, Enuc);
+	ESCF_i = E_Total(dim, D, Hcorec, F, Enuc);
 	printf("  Initial E_SCF is %12.10f\n",ESCF);
 
 
