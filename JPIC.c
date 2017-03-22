@@ -18,7 +18,7 @@ int i,j,pi;
 int dim;
 int nmax;
 double L, mass, hbar;
-
+int iter, itermax;
 
 // Hartree Fock H20 Files
 FILE *enucfp, *overlap, *nucatt, *ekin;
@@ -26,6 +26,7 @@ double val, enuc, *Sc, *Vc, *Tc, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fock
 double *eps, *Cp, *C, *D, sum, Eelec;
 int ij,kl;
 double *Svals, *Svecs, *SqrtSvals, *SqrtS;
+double ESCF, ESCF_i;
 
 // Relevant HF functions
 void BuildDensity(int dim, int occ, double *C, double *D);
@@ -33,6 +34,8 @@ int DIAG_N(int dim, int number, double *mat, double *en, double *wfn);
 void Diagonalize(double*M,long int dim, double*eigval,double*eigvec);
 void print_matrix( char* desc, int m, int n, double* a, int lna);
 void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c);
+double E_Total(int dim, double *D, double *HCore, double *F, double Enuc);
+
 
 // Custom cubic HF functions
 void CubicPhi();
@@ -58,6 +61,7 @@ double *Hcore;
 double *E, *E1, *E2;
 double *A;
 double *lambdasqrt, *temp, *Fock;
+double Enuc;
 
 // Phi Variables
 
@@ -195,7 +199,7 @@ int main()
     overlap = fopen("./s.dat", "r");
     nucatt = fopen("./v.dat", "r");
     ekin = fopen("./t.dat", "r");
-    fscanf(enucfp,"%lf",&enuc);
+    fscanf(enucfp,"%lf",&Enuc);
 
     for(i=0; i<dim; i++) {
         for(j=0; j<=i; j++) {
@@ -233,7 +237,7 @@ int main()
         
 	for (i=0; i<dim; i++) 
 	{
-    SqrtSvals[i*dim + i] = pow(Svals[i],-1./2);
+    	SqrtSvals[i*dim + i] = pow(Svals[i],-1./2);
 	}
 
 	print_matrix("Hcore", dim, dim, Hcorec, dim);
@@ -246,23 +250,30 @@ int main()
       
 	// Form Fock matrix F = S^{-1/2}^t H_core S^{1/2}
 	LoopMM(dim, Hcorec, "n", SqrtS, "n", temp);
-	LoopMM(dim, SqrtS, "t", temp, "n", Fock);
-	print_matrix("  Fock", dim, dim, Fock, dim);
+	LoopMM(dim, SqrtS, "t", temp, "n", Fockc);
+	print_matrix("  Fock", dim, dim, Fockc, dim);
 
-	// Get Guess MO matrix from diagnoalizing Fock matrix
-	DIAG_N(dim, dim, Fock, eps, Cp);
+	// Get Guess MO matrix from diagnoalizing Fock matrix	
+
+	// BREAKS HERE!
+
+	DIAG_N(dim, dim, Fockc, eps, Cp);
 	print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
-
 	LoopMM(dim, SqrtS, "n", Cp, "n", C);
 
 	// Build initial density matrix
-	BuildDensity(dim, nelec, C, D);
+	BuildDensity(dim, 5, C, D);
+
 	print_matrix("  Coefficients", dim, dim, C, dim);
 	print_matrix("  Density Matrix", dim, dim, D, dim);
 
-	ESCF_i = E_Total(dim, D, Hcorec, F, Enuc);
+	ESCF_i = E_Total(dim, D, Hcorec, Fockc, Enuc);
 	printf("  Initial E_SCF is %12.10f\n",ESCF);
 
+	int die = 1;
+  	iter=0;
+
+	printf("  ITERATION 0:  RHF ENERGY IS %18.14f\n",ESCF_i);
 
     //---------------------------------------------------------------------------
     // Step #2: AO-Overlap, KE Integrals, Building of Hcore.
@@ -644,7 +655,7 @@ void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c
   }
 } 
 
-/*
+
 
 // Need to loop through all phi's. 4 orbitals, so 4 for loops.
 void TwoERICalc()
@@ -807,12 +818,14 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 
   return eri_val;
 
-} */    
+}     
 
 
 void BuildDensity(int dim, int occ, double *C, double *D) {
   int i, j, m;
   double sum;
+
+	sum = 0.;
 
   for (i=0; i<dim; i++) {
     for (j=0; j<dim; j++) {
@@ -833,7 +846,7 @@ double E_Total(int dim, double *D, double *Hc, double *F, double Enuc) {
   sum = 0.;
   for (m=0; m<dim; m++) {
     for (n=0; n<dim; n++) {
-      sum += D[m*dim+n]*(Hc[m*dim+n] + F[m*dim+n]);
+     // sum += D[m*dim+n]*(Hc[m*dim+n] + F[m*dim+n]);
             sum += D[m*dim+n]*(Hc[m*dim+n] + F[m*dim+n]);
                 }
                   }
