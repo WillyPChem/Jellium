@@ -4,8 +4,6 @@
 //
 //  Physical Chemistry II Project
 //
-//
-
 #include<stdio.h>
 #include<cmath>
 #include<math.h>
@@ -59,7 +57,7 @@ int *NPOrbE, *NPOrb_x, *NPOrb_y, *NPOrb_z;
 // Two Electron Repulsion Integral Variables
 
 double *adim, *bdim, *cdim, *ddim;
-double *ERIa, *ERIb, *ERIc, *ERId;
+double *ERIa, *ERIb, *ERIc, *ERId, *teri;
 double *x, *w;
 int n;
 
@@ -172,13 +170,15 @@ int main()
     KineticEnergyIntegrals();
     CrawdadFormat();
 
-    // Print Hamiltonian Core
+  // Print Hamiltonian Core
     // ----------------------
     print_matrix("Hcore", dim, dim, Hcore, dim);
 
     // Define S matrix
     // ---------------
-    print_matrix(" S ", dim, dim, S, dim);
+  // print_matrix(" S ", dim, dim, S, dim);
+
+    /* 
 
     //---------------------------------------------------------------------------
     // Step #3: Two-Electron Repulsion Integrals
@@ -225,7 +225,7 @@ int main()
 
     DIAG_N(dim, dim, Fock, Fvals, Fvecs);
 
-    LoopMM(dim, sqrtS, "n", )
+  //LoopMM(dim, sqrtS, "n", )
 
     //---------------------------------------------------------------------------
     // Step #6: Compute the Initial SCF Energy
@@ -251,8 +251,12 @@ int main()
     // Step #11: Building of Hamiltonian from HF MO's for PIS
     //---------------------------------------------------------------------------
 
+*/
 
 }
+
+
+
 
 void CrawdadFormat()
 {
@@ -303,13 +307,13 @@ void KineticEnergyIntegrals()
                     
                      T[i] = factor * (pow(NPOrb_x[i],2) + pow(NPOrb_y[i],2) + pow(NPOrb_z[i],2));
                      //printf("%i %i %f\n",i,j,T[i]);
-                     printf("for nx=%i ny=%i nz=%i phi = %i %f\n",NPOrb_x[i],NPOrb_y[i],NPOrb_z[i],i,T[i]);
+                //     printf("for nx=%i ny=%i nz=%i phi = %i %f\n",NPOrb_x[i],NPOrb_y[i],NPOrb_z[i],i,T[i]);
                 }
                 else if ( i != j) 
                 {   
                     
                      T[i] = 0;
-                    printf("%i %i %f\n",i,j,T[i]);
+                //    printf("%i %i %f\n",i,j,T[i]);
                 }
             }
         }
@@ -443,7 +447,7 @@ void print_matrix( char* desc, int m, int n, double* a, int lna ) {
         printf("----------------------\n\n");
 }
 
-
+/*
 
 int DIAG_N(int dim, int number, double *mat, double *en, double *wfn) {
   int i,j,ind, state_max, count;
@@ -576,7 +580,7 @@ void TwoERICalc()
                     teri[index] = ERI(n, *x, *w, *adim, *bdim, *cdim, *ddim);
 
                     }
-                    
+
                     else
                     {
 
@@ -587,9 +591,6 @@ void TwoERICalc()
                     teri[index] = 0;
                     
                     }
-
-
-
 
                     index++;
 
@@ -696,7 +697,7 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 
   return eri_val;
 
-}
+} */    
 
 
 
