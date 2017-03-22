@@ -252,7 +252,6 @@ int main()
     //---------------------------------------------------------------------------
 
 
-
 }
 
 void CrawdadFormat()
@@ -534,10 +533,12 @@ void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c
 } 
 
 // Need to loop through all phi's. 4 orbitals, so 4 for loops.
-
 void TwoERICalc()
 {
     int a,b,c,d;
+    int index;
+
+    index = 0;
 
     for(a=0; a<NPOrbE[dim]; a++)
     {
@@ -549,7 +550,6 @@ void TwoERICalc()
                 {
 
                     // Assign phi nx, ny & nz values for ERI format.
-
                     adim[0] = NPOrb_x[a];
                     adim[1] = NPOrb_y[a];
                     adim[2] = NPOrb_z[a];
@@ -566,13 +566,32 @@ void TwoERICalc()
                     ddim[1] = NPOrb_y[d];
                     ddim[2] = NPOrb_z[d];
 
+                    if ( a != b && b != c && c != d )
+                    {
                     // Store ERI for values in teri array & coords.
+                    ERIa[index] = a;
+                    ERIb[index] = b;
+                    ERIc[index] = c;
+                    ERId[index] = d;
+                    teri[index] = ERI(n, *x, *w, *adim, *bdim, *cdim, *ddim);
 
-                    ERIa[a] = a;
-                    ERIb[a] = b;
-                    ERIc[a] = c;
-                    ERId[a] = d;
-                    teri[a] = ERI(n, *x, *w, *adim, *bdim, *cdim, *ddim);
+                    }
+                    
+                    else
+                    {
+
+                    ERIa[index] = 0;
+                    ERIb[index] = 0;
+                    ERIc[index] = 0;
+                    ERId[index] = 0;
+                    teri[index] = 0;
+                    
+                    }
+
+
+
+
+                    index++;
 
                 }
             }
