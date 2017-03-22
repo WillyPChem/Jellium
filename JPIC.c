@@ -18,6 +18,14 @@ int dim;
 int nmax;
 double L, mass, hbar;
 
+
+// Hartree Fock H20 Files
+FILE *enucfp, *overlap, *nucatt, *ekin;
+double val, enuc, *Sc, *Vc, *Tc, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fockc, *squarerootS, *temporary;
+double *eps, *Cp, *C, *D, sum, Eelec;
+int ij,kl;
+
+
 // Relevant HF functions
 int DIAG_N(int dim, int number, double *mat, double *en, double *wfn);
 void Diagonalize(double*M,long int dim, double*eigval,double*eigvec);
@@ -42,7 +50,6 @@ int ncis, nstates; // ncis is total # of single excited configurations, nstates 
 
 // Relevant Hartree Fock Variables
 
-double enuc;
 double *S, *Svals, *Svecs, *sqrtS;
 double *T;
 double *Hcore;
@@ -77,7 +84,8 @@ int main()
     nmax = 2;
 
     // Define dimensions (nmax*nmax*nmax)
-    dim = nmax*nmax*nmax;
+  //  dim = nmax*nmax*nmax;
+    dim = 7;
 
     // Number of electrons in system.
     nelec = 4; 
@@ -150,11 +158,72 @@ int main()
     x = (double *)malloc(n*sizeof(double)); 
     w = (double *)malloc(n*sizeof(double));
 
+
+    // HF H2O INFO
+        Sc = (double *)malloc(dim*dim*sizeof(double));
+        Tc = (double *)malloc(dim*dim*sizeof(double));
+        Vc = (double *)malloc(dim*dim*sizeof(double));
+        Hcorec = (double *)malloc(dim*dim*sizeof(double));
+        lambda = (double *)malloc(dim*sizeof(double));
+        lambdasquareroot = (double *)malloc(dim*dim*sizeof(double));
+        Ls       = (double *)malloc(dim*dim*sizeof(double));
+        Fockc     = (double *)malloc(dim*dim*sizeof(double));
+        squarerootS = (double *)malloc(dim*dim*sizeof(double));
+        temporary = (double *)malloc(dim*dim*sizeof(double));
+
+        eps = (double *)malloc(dim*sizeof(double));
+        Cp = (double *)malloc(dim*dim*sizeof(double));
+        C = (double *)malloc(dim*dim*sizeof(double));
+        D = (double *)malloc(dim*dim*sizeof(double));
+
     //---------------------------------------------------------------------------
     // Step #1: Nuclear Repulsion Energy
     //---------------------------------------------------------------------------
 
     // Considered a constant. Can skip this for now?
+
+    // HF H20, enuc.dat
+
+    enucfp = fopen("./enuc.dat", "r");
+    overlap = fopen("./s.dat", "r");
+    nucatt = fopen("./v.dat", "r");
+    ekin = fopen("./t.dat", "r");
+    fscanf(enucfp,"%lf",&enuc);
+
+    for(i=0; i<dim; i++) {
+        for(j=0; j<=i; j++) {
+
+        // Overlap (S)
+
+        fscanf(overlap,"%i",&ij);
+        fscanf(overlap,"%i",&kl);
+        fscanf(overlap,"%lf",&val);
+        Sc[i*dim+j] = val;
+        Sc[j*dim+i] = val;
+
+        // Nuclear Attraction (V)
+
+        fscanf(nucatt,"%i",&ij);
+        fscanf(nucatt,"%i",&kl);
+        fscanf(nucatt,"%lf",&val);
+        Vc[i*dim+j] = val;
+        Vc[j*dim+i] = val;
+
+        // Kinetic Energy (T)   
+
+        fscanf(ekin, "%lf", &ij);
+        fscanf(ekin, "%lf", &kl);
+        fscanf(ekin, "%lf", &val);
+        Tc[i*dim+j] = val;
+        Tc[j*dim+i] = val;
+
+        Hcorec[i*dim+j] = Tc[i*dim+j] + Vc[i*dim+j];
+        Hcorec[j*dim+i] = Tc[j*dim+i] + Vc[j*dim+i];
+
+    }
+}
+
+        
 
     //---------------------------------------------------------------------------
     // Step #2: AO-Overlap, KE Integrals, Building of Hcore.
@@ -162,17 +231,17 @@ int main()
 
     // Calculate AO energies
     // ---------------------
-    CubicPhi();
-    AtomicOrbitalOverlap();
+ //   CubicPhi();
+ //   AtomicOrbitalOverlap();
 
     // Calculate KE energy integrals (T matrix)
     // ----------------------------------------
-    KineticEnergyIntegrals();
-    CrawdadFormat();
+ //   KineticEnergyIntegrals();
+ //   CrawdadFormat();
 
   // Print Hamiltonian Core
     // ----------------------
-    print_matrix("Hcore", dim, dim, Hcore, dim);
+    print_matrix("Hcore", dim, dim, Hcorec, dim);
 
     // Define S matrix
     // ---------------
