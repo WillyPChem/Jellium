@@ -182,13 +182,13 @@ int main()
     ddim = (double *)malloc(3*sizeof(double));
 
     // Storage of 2eri values after ERI function.
-    ERIa = (double *)malloc(dim*dim*sizeof(double));
-    ERIb = (double *)malloc(dim*dim*sizeof(double));
-    ERIc = (double *)malloc(dim*dim*sizeof(double));
-    ERId = (double *)malloc(dim*dim*sizeof(double));
-    teri = (double *)malloc(dim*dim*sizeof(double));
+    ERIa = (double *)malloc(dim*dim*dim*dim*sizeof(double));
+    ERIb = (double *)malloc(dim*dim*dim*dim*sizeof(double));
+    ERIc = (double *)malloc(dim*dim*dim*dim*sizeof(double));
+    ERId = (double *)malloc(dim*dim*dim*dim*sizeof(double));
+    teri = (double *)malloc(dim*dim*dim*dim*sizeof(double));
 
-    n = 320;
+    n = 50;
    
     // HF H2O INFO
     Sc = (double *)malloc(dim*dim*sizeof(double));
@@ -314,9 +314,12 @@ int main()
 
     x = (double *)malloc(n*sizeof(double));
     w = (double *)malloc(n*sizeof(double));
-    legendre_compute_glr(n, x, w);
-    
-    TwoERICalc(n, *x, *w);
+   
+
+ 	legendre_compute_glr(n, x, w);
+ 	rescale (0, 1, n, x, w); 
+   
+   TwoERICalc(n, x, w);
 
     //---------------------------------------------------------------------------
     // Step #4: Build the Orthogonalization Matrix
@@ -357,19 +360,20 @@ int main()
       
     // Form an initial (guess) Fock matrix in orthonormal basis using core Hamiltonian as a guess: Fock matrix F = S^{-1/2}^t H_core S^{1/2}
 	LoopMM(dim, Hcore, "n", SqrtS, "n", temp);
-	LoopMM(dim, SqrtS, "t", temp, "n", Fockc);
-	//print_matrix("  Fock", dim, dim, Fockc, dim);
+	LoopMM(dim, SqrtS, "t", temp, "n", Fock);
+	print_matrix("  Fock", dim, dim, Fock, dim);
+	
 
 	// Get Guess MO matrix from diagnoalizing Fock matrix:
 	DIAG_N(dim, dim, Fock, eps, Cp);
-//	print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
+	print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
 	
     // Transform the eigenvectors into the original (non-orthogonal) AO basis.
-    LoopMM(dim, SqrtS, "n", Cp, "n", C);
+   	LoopMM(dim, SqrtS, "n", Cp, "n", C);
 
 	// Build initial density matrix using the occupied MO's: D = sum (m to occ) C * C.
 	BuildDensity(dim, nelec, C, D);
-//	print_matrix("  Coefficients", dim, dim, C, dim);
+	print_matrix("  Coefficients", dim, dim, C, dim);
 	print_matrix("  Density Matrix", dim, dim, D, dim);
 
     // CUSTOM:____________________________________________________________________________
@@ -378,12 +382,14 @@ int main()
     //---------------------------------------------------------------------------
     // Step #6: Compute the Initial SCF Energy
     //---------------------------------------------------------------------------
-	ESCF_i = E_Total(dim, D, Hcore, Fock, Enuc);
+	ESCF_i = E_Total(dim, D, Hcorec, Fock, Enuc);
 	printf("  Initial E_SCF is %12.10f\n",ESCF);
 
 	int die = 1;
   	iter=0;
 	printf("  ITERATION 0:  RHF ENERGY IS %18.14f\n",ESCF_i);
+	exit(0);
+
 
     //---------------------------------------------------------------------------
     // Step #7: Compute the New Fock Matrix
@@ -521,7 +527,7 @@ do {
             {
                 Hcore[idx*dim+idx] = T[idx];
                 S[idx*dim+idx] = A[idx];
-		printf(" %f %f\n",Hcore[idx*dim+idx],T[idx]);
+	//	printf(" %f %f\n",Hcore[idx*dim+idx],T[idx]);
             }
         }        
     
@@ -824,7 +830,9 @@ void ReadEI(int dim, FILE *fp, double *EE) {
     EE[FourDIndx(l,k,i,j,dim)] = val;
     EE[FourDIndx(k,l,j,i,dim)] = val;
     EE[FourDIndx(l,k,j,i,dim)] = val;
-  }
+  
+	printf(" i=%i j=%i k=%i l=%i val=%f\n",i,j,k,l,val);
+}
 
 }
 
@@ -904,7 +912,7 @@ void TwoERICalc(int number, double *xa, double *wa)
                     ERIb[index] = b;
                     ERIc[index] = c;
                     ERId[index] = d;
-                    teri[index] = ERI(number, xa, wa, *adim, *bdim, *cdim, *ddim);
+                    teri[index] = ERI(number, xa, wa, adim, bdim, cdim, ddim);
                   
                     index++;
 
@@ -1846,8 +1854,8 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
               fac = faci*facj*fack*facl*facm*facn;          
              
               // Uncomment to see the functions being integrated in each call to pq_int 
-              //printf(" + %f Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] \n",
-              //fac,cx1[n],cx2[m],cy1[l],cy2[k],cz1[j],cz2[i]);
+             // printf(" + %f Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] \n",
+            //  fac,cx1[n],cx2[m],cy1[l],cy2[k],cz1[j],cz2[i]);
               // recall pq_int args are -> dim, *xa, *w, px, py, pz, qx, qy, qz
               // order of indices to get these values is a bit strange, see print statement
               // for example of ordering!
