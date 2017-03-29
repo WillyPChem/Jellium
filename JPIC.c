@@ -44,12 +44,11 @@ void KineticEnergyIntegrals();
 void CrawdadFormat();
 
 // Peter Gill Two Electron Repulsion Integral 
-//double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
+double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
 // Revised Version to fit HF code.
-//void TwoERICalc();
-//double pq_int(double px, double py, double pz, double qx, double qy, double qz);
-//double g_pq(double p, double q, double r);
-
+void TwoERICalc();
+double pq_int(double px, double py, double pz, double qx, double qy, double qz);
+double g_pq(double p, double q, double r);
 
 //Basic Parameters
 int nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
@@ -74,7 +73,7 @@ int *NPOrbE, *NPOrb_x, *NPOrb_y, *NPOrb_z;
 
 double *adim, *bdim, *cdim, *ddim;
 double *ERIa, *ERIb, *ERIc, *ERId, *teri;
-double *x, *w;
+double *xb, *w;
 int n;
 
 int main()
@@ -174,7 +173,7 @@ int main()
     teri = (double *)malloc(dim*dim*sizeof(double));
 
     n = 320;
-    x = (double *)malloc(n*sizeof(double)); 
+    xb = (double *)malloc(n*sizeof(double)); 
     w = (double *)malloc(n*sizeof(double));
 
 
@@ -200,9 +199,9 @@ int main()
     Dn = (double *)malloc(dim*dim*sizeof(double));
 
     Svals = (double *)malloc(dim*sizeof(double));
-	SqrtSvals = (double *)malloc(dim*dim*sizeof(double));
-	Svecs = (double *)malloc(dim*dim*sizeof(double));
-	SqrtS = (double *)malloc(dim*dim*sizeof(double));	
+    SqrtSvals = (double *)malloc(dim*dim*sizeof(double));
+    Svecs = (double *)malloc(dim*dim*sizeof(double));
+    SqrtS = (double *)malloc(dim*dim*sizeof(double));	
 
     //---------------------------------------------------------------------------
     // Step #1: Nuclear Repulsion Energy
@@ -221,17 +220,17 @@ int main()
 
     // Calculate AO energies
     // ---------------------
-    // CubicPhi();
-    // AtomicOrbitalOverlap();
+     CubicPhi();
+     AtomicOrbitalOverlap();
 
     // Calculate KE energy integrals (T matrix)
     // ----------------------------------------
-    // KineticEnergyIntegrals();
-    // CrawdadFormat();
+     KineticEnergyIntegrals();
+     CrawdadFormat();
 
     // Print Hamiltonian Core
     // ----------------------
-    //  print_matrix("Hcore", dim, dim, Hcorec, dim);
+    print_matrix(" Hcore ", dim, dim, Hcore, dim); 
 
     // Define S matrix
     // ---------------
@@ -296,7 +295,7 @@ int main()
     //------------------------------------------------------------------------------------
 
     // Peter Gill Gaussian Legendre formatted for our code. Needs to be tested..
-    //TwoERICalc();
+    TwoERICalc();
 
     //---------------------------------------------------------------------------
     // Step #4: Build the Orthogonalization Matrix
@@ -306,7 +305,7 @@ int main()
     //-----------------------------------------------------------------------------------
 
     // Diagonalize the overlap matrix.
-	DIAG_N(dim, dim, Sc, Svals, Svecs);
+     	DIAG_N(dim, dim, S, Svals, Svecs);
         
 	for (i=0; i<dim; i++) 
 	{
@@ -321,7 +320,7 @@ int main()
     // Build the symmetric orthoigonalization matrix: Form S^{-1/2} = L_S s^{-1/2} L_S^t
 	 LoopMM(dim, SqrtSvals, "n", Svecs, "t", temp);
 	 LoopMM(dim, Svecs, "n", temp, "n", SqrtS);
-	print_matrix(" S^-1/2 ", dim, dim, SqrtS, dim);
+	// print_matrix(" S^-1/2 ", dim, dim, SqrtS, dim);
 
     // CUSTOM:____________________________________________________________________________
     //------------------------------------------------------------------------------------
@@ -336,20 +335,20 @@ int main()
     //-----------------------------------------------------------------------------------
       
     // Form an initial (guess) Fock matrix in orthonormal basis using core Hamiltonian as a guess: Fock matrix F = S^{-1/2}^t H_core S^{1/2}
-	LoopMM(dim, Hcorec, "n", SqrtS, "n", temp);
+	LoopMM(dim, Hcore, "n", SqrtS, "n", temp);
 	LoopMM(dim, SqrtS, "t", temp, "n", Fockc);
-	print_matrix("  Fock", dim, dim, Fockc, dim);
+	//print_matrix("  Fock", dim, dim, Fockc, dim);
 
 	// Get Guess MO matrix from diagnoalizing Fock matrix:
-	DIAG_N(dim, dim, Fockc, eps, Cp);
-	print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
+	DIAG_N(dim, dim, Fock, eps, Cp);
+//	print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
 	
     // Transform the eigenvectors into the original (non-orthogonal) AO basis.
     LoopMM(dim, SqrtS, "n", Cp, "n", C);
 
 	// Build initial density matrix using the occupied MO's: D = sum (m to occ) C * C.
-	BuildDensity(dim, 5, C, D);
-	print_matrix("  Coefficients", dim, dim, C, dim);
+	BuildDensity(dim, nelec, C, D);
+//	print_matrix("  Coefficients", dim, dim, C, dim);
 	print_matrix("  Density Matrix", dim, dim, D, dim);
 
     // CUSTOM:____________________________________________________________________________
@@ -358,12 +357,11 @@ int main()
     //---------------------------------------------------------------------------
     // Step #6: Compute the Initial SCF Energy
     //---------------------------------------------------------------------------
-	ESCF_i = E_Total(dim, D, Hcorec, Fockc, Enuc);
+	ESCF_i = E_Total(dim, D, Hcore, Fock, Enuc);
 	printf("  Initial E_SCF is %12.10f\n",ESCF);
 
 	int die = 1;
   	iter=0;
-
 	printf("  ITERATION 0:  RHF ENERGY IS %18.14f\n",ESCF_i);
 
     //---------------------------------------------------------------------------
@@ -502,6 +500,7 @@ do {
             {
                 Hcore[idx*dim+idx] = T[idx];
                 S[idx*dim+idx] = A[idx];
+		printf(" %f %f\n",Hcore[idx*dim+idx],T[idx]);
             }
         }        
     
@@ -517,9 +516,9 @@ do {
 // Kinetic energy operator following crawdad labeling.
 void KineticEnergyIntegrals()
 {
-    int i, j, imax, z, mass;
+    int i, j, imax, z, m;
     double factor;
-    factor = (hbar*hbar*pi*pi) / (2*mass*L*L);
+    factor = (hbar*hbar*pi*pi) / (2*L*L);
 
     imax = 0;
     z = 0;
@@ -839,13 +838,14 @@ void UpdateF(int dim, double *D, double *Hcore, double *EI, double *Fnew) {
   }
 }
 
-/*
+
 
 // Need to loop through all phi's. 4 orbitals, so 4 for loops.
 void TwoERICalc()
 {
     int a,b,c,d;
     int index;
+    
 
     index = 0;
 
@@ -875,28 +875,14 @@ void TwoERICalc()
                     ddim[1] = NPOrb_y[d];
                     ddim[2] = NPOrb_z[d];
 
-                    if ( a != b && b != c && c != d )
-                    {
+                  
                     // Store ERI for values in teri array & coords.
                     ERIa[index] = a;
                     ERIb[index] = b;
                     ERIc[index] = c;
                     ERId[index] = d;
-//                    teri[index] = ERI(n, *x, *w, *adim, *bdim, *cdim, *ddim);
-
-                    }
-
-                    else
-                    {
-
-                    ERIa[index] = 0;
-                    ERIb[index] = 0;
-                    ERIc[index] = 0;
-                    ERId[index] = 0;
-                    teri[index] = 0;
-                    
-                    }
-
+                    teri[index] = ERI(n, *xb, *w, *adim, *bdim, *cdim, *ddim);
+                  
                     index++;
 
                 }
@@ -982,7 +968,7 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
               // recall pq_int args are -> dim, *xa, *w, px, py, pz, qx, qy, qz
               // order of indices to get these values is a bit strange, see print statement
               // for example of ordering!
-              tempval = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
+              tempval = pq_int( x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
               printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],tempval);
               eri_val += fac*tempval;
               
@@ -1006,7 +992,7 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 
 }     
 
-*/
+
 
 void BuildDensity(int dim, int occ, double *C, double *D) {
   int i, j, m;
@@ -1041,7 +1027,7 @@ double E_Total(int dim, double *D, double *Hc, double *F, double Enuc)
                     return sum + Enuc;
 }
 
-/*
+
 
 double pq_int(double px, double py, double pz, double qx, double qy, double qz) {
 
@@ -1094,4 +1080,4 @@ double g_pq(double p, double q, double x) {
   return g;
 }
 
-*/
+
