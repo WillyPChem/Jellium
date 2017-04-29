@@ -72,7 +72,7 @@ int main()
     hbar = 1;
 
     // Highest eigenfunction value for N.
-    nmax = 4;
+    nmax = 2;
 
     // Define dimensions (nmax*nmax*nmax)
     dim = nmax*nmax*nmax;
@@ -188,6 +188,13 @@ int main()
     // CUSTOM:____________________________________________________________________________
     //------------------------------------------------------------------------------------
 
+    // Overlap (S)
+
+    aOrbital = fopen("Sfp.dat", "w");
+
+    CubicPhi();
+    AtomicOrbitalOverlap();
+    return(0);
     
 
     // Self Energy -- doesn't need to be changed.
@@ -206,10 +213,7 @@ int main()
     // Calculate AO energies
     // ---------------------
 
-    // Overlap (S)
-
-    CubicPhi();
-    AtomicOrbitalOverlap();
+    
 
     // Electron Repulsion Integrals (EE)
 
@@ -525,6 +529,7 @@ do {
             if ( i == j)
             {
                 S[idx*dim+idx] = A[idx];
+                fprintf(Sfp, " %i  %i  %17.14f\n",S[idx*dim+idx]);
             }
         }        
     

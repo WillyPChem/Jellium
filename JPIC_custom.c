@@ -31,11 +31,6 @@ void CubicPhi();
 void AtomicOrbitalOverlap();
 void CrawdadFormat();
 
-//Basic Parameters
-int nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
-int nocc, nuno; // nocc = number of occupied orbitals, which is total # of electrons / 2, with 2 electrons per orbital. // nuno is remaining unoccupied orbitals.
-int ncis, nstates; // ncis is total # of single excited configurations, nstates is total number of ncis plus ground state configuration.
-
 // Relevant Hartree Fock Variables
 double *S, *sqrtS;
 double *T;
@@ -53,7 +48,6 @@ int n;
 int main()
 {
 
-
 	// Definition of pi
     pi = 4.*atan(1.0);
     
@@ -64,19 +58,19 @@ int main()
     hbar = 1;
 
     // Highest eigenfunction value for N.
-    nmax = 2;
+    nmax = 4;
 
     // Define dimensions (nmax*nmax*nmax)
     //  dim = nmax*nmax*nmax;
-    dim = 7;
+    dim = nmax*nmax*nmax;
 
     // Number of electrons in system.
     nelec = 2; 
    
     // total number of orbitals... note we are limiting l<=2 in this case (s, p, and d orbs)
-
     ntotal=0;
-  /*  for (i=1; i<=nmax; i++) {
+  
+    /*  for (i=1; i<=nmax; i++) {
         
         if (i<=3) {
             ntotal+= i*i;
