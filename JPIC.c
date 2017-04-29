@@ -1,9 +1,4 @@
-//
-//  JPIS.c
-//  
-//
-//  Physical Chemistry II Project
-//
+//   JPIS.c       Physical Chemistry II Project
 #include<stdio.h>
 #include<cmath>
 #include<math.h>
@@ -40,6 +35,7 @@ void CubicPhi();
 void AtomicOrbitalOverlap();
 void KineticEnergyIntegrals();
 void CrawdadFormat();
+void ERIFormat();
 
 // Peter Gill Two Electron Repulsion Integral 
 double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
@@ -67,14 +63,12 @@ double pq_int(double px, double py, double pz, double qx, double qy, double qz);
 double g_pq(double p, double q, double r);
 
 
-
 //Basic Parameters
 int nelec, ntotal; // nmax = highest eigenfunction value for n, nelec = total # of electrons in system, ntotal = total # of orbitals.
 int nocc, nuno; // nocc = number of occupied orbitals, which is total # of electrons / 2, with 2 electrons per orbital. // nuno is remaining unoccupied orbitals.
 int ncis, nstates; // ncis is total # of single excited configurations, nstates is total number of ncis plus ground state configuration.
 
 // Relevant Hartree Fock Variables
-
 double *S, *sqrtS;
 double *T;
 double *Hcore;
@@ -107,11 +101,11 @@ int main()
     hbar = 1;
 
     // Highest eigenfunction value for N.
-    nmax = 2;
+    nmax = 4;
 
     // Define dimensions (nmax*nmax*nmax)
-  //  dim = nmax*nmax*nmax;
-    dim = 7;
+    dim = nmax*nmax*nmax;
+    //dim = 7;
 
     // Number of electrons in system.
     nelec = 2; 
@@ -148,6 +142,8 @@ int main()
     // ------------------------------------
 
     FILE *enucfp, *overlap, *nucatt, *ekin, *EEfp;
+
+    
     double val, enuc, *Sc, *Vc, *Tc, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fockc, *squarerootS, *temporary;
     double *eps, *Cp, *C, *D, *Dn, sum, Eelec, *Fnew, *EE;
     int ij,kl;
@@ -233,19 +229,86 @@ int main()
     // CUSTOM:____________________________________________________________________________
     //------------------------------------------------------------------------------------
 
+    
+
+    // Self Energy -- doesn't need to be changed.
+    nucfp = fopen("./SelfEnergy.dat", "r");
+    fscanf(nucfp,"%lf",&Enuc);
+
+    // Nuclear Attraction -- doesn't need to be changed.
+    nAttract = fopen("./NucAttraction.dat", "r");
+
+    // Kinetic Energy -- doesn't need to be changed.
+    kinEnergy = fopen("./Kinetic.dat", "r");
+
+    // Electron-Electron Repulsion -- Need to capture the unique values.
+    eeRep = fopen("./ERI.dat", "r");
+
     // Calculate AO energies
     // ---------------------
-     CubicPhi();
-     AtomicOrbitalOverlap();
+
+    // Overlap (S)
+
+    CubicPhi();
+    AtomicOrbitalOverlap();
+
+    // Electron Repulsion Integrals (EE)
+
+    ERIFormat();
+    ReadEI(dim, eeRep, EE);
+
+    // Write function to get unique values of these.
+
+
+    for(i=0; i<dim; i++) {
+        for(j=0; j<=i; j++) {
+
+        // Nuclear Attraction (V)
+
+        fscanf(nAttract,"%i",&ij);
+        fscanf(nAttract,"%i",&kl);
+        fscanf(nAttract,"%lf",&val);
+        Vc[i*dim+j] = val;
+        Vc[j*dim+i] = val;
+
+        // Kinetic Energy (T)   
+
+        fscanf(kinEnergy, "%lf", &ij);
+        fscanf(kinEnergy, "%lf", &kl);
+        fscanf(kinEnergy, "%lf", &val);
+        Tc[i*dim+j] = val;
+        Tc[j*dim+i] = val;
+
+        Hcorec[i*dim+j] = Tc[i*dim+j] + Vc[i*dim+j];
+        Hcorec[j*dim+i] = Tc[j*dim+i] + Vc[j*dim+i];
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // Calculate KE energy integrals (T matrix)
     // ----------------------------------------
-     KineticEnergyIntegrals();
-     CrawdadFormat(); // Modify to build out the proper hamiltonian for jellium. 
+    // KineticEnergyIntegrals();
+    
+
+    // CrawdadFormat(); // Modify to build out the proper hamiltonian for jellium. 
 
     // Print Hamiltonian Core
     // ----------------------
-    print_matrix(" Hcore ", dim, dim, Hcore, dim); 
+     print_matrix(" Hcore ", dim, dim, Hcore, dim); 
+     return(0);
 
     // Define S matrix
     // ---------------
@@ -255,7 +318,7 @@ int main()
     // WATER: __________________________________________________________________________
     //----------------------------------------------------------------------------------    
 
-    enucfp = fopen("./enuc.dat", "r");
+   /* enucfp = fopen("./enuc.dat", "r");
     overlap = fopen("./s.dat", "r");
     nucatt = fopen("./v.dat", "r");
     ekin = fopen("./t.dat", "r");
@@ -294,7 +357,7 @@ int main()
         Hcorec[j*dim+i] = Tc[j*dim+i] + Vc[j*dim+i];
 
     }
-}
+} */
 
     //---------------------------------------------------------------------------
     // Step #3: Two-Electron Repulsion Integrals
@@ -310,18 +373,7 @@ int main()
     // CUSTOM:____________________________________________________________________________
     //------------------------------------------------------------------------------------
 
-    // Peter Gill Gaussian Legendre formatted for our code. Needs to be tested..
-    
-    double *x, *w;
-
-    x = (double *)malloc(n*sizeof(double));
-    w = (double *)malloc(n*sizeof(double));
    
-
- 	legendre_compute_glr(n, x, w);
- 	rescale (0, 1, n, x, w); 
-   
-   TwoERICalc(n, x, w);
 
     //---------------------------------------------------------------------------
     // Step #4: Build the Orthogonalization Matrix
@@ -518,17 +570,13 @@ void CrawdadFormat()
     idx = 0;
 
 do {
-
     for(i=0; i<=dim*idx; i++) 
     {
         for(j=0; j<=i; j++) 
         {
-
             if ( i == j)
             {
-                Hcore[idx*dim+idx] = T[idx];
                 S[idx*dim+idx] = A[idx];
-	//	printf(" %f %f\n",Hcore[idx*dim+idx],T[idx]);
             }
         }        
     
@@ -537,11 +585,11 @@ do {
     idx++;
 
 }   while (idx < dim);
-
 }
 
 
-void ERIFormat() 
+
+/* void ERIFormat() 
 {
     int i,j,idx;
     idx = 0;
@@ -553,7 +601,9 @@ do
     {
         for(j=0; j<=i; j++)
         {
-            if (i == j)
+            if (i == j) {
+
+            }
         }
     }
 
@@ -563,8 +613,7 @@ do
 
 } while (idx < dim*dim*dim*dim);
 
-
-}
+} */
 
 // Kinetic energy operator following crawdad labeling.
 void KineticEnergyIntegrals()
