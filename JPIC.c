@@ -112,7 +112,7 @@ int main()
     // HARTREE FOCK CODE
     // ------------------------------------
 
-    FILE *enucfp, *overlap, *nucatt, *ekin, *EEfp;
+    FILE *enucfp, *overlap, *nucatt, *ekin, *EEfp, *nucfp, *nAttract, *kinEnergy, *eeRep;
 
     
     double val, enuc, *Sc, *Vc, *Tc, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fockc, *squarerootS, *temporary;
