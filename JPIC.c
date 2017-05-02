@@ -28,6 +28,7 @@ void ReadEI(int dim, FILE *fp, double *EE);
 int FourDIndx(int i, int j, int k, int l, int dim);
 double DensityDiff(int dim, double *D, double *Dnew);
 void UpdateF(int dim, double *D, double *Hcore, double *EI, double *Fnew);
+void buildHamiltonian(double *Kin, double *Pot); 
 
 
 // Custom cubic HF functions
@@ -48,43 +49,41 @@ double *T;
 double *Hcore;
 double *E, *E1, *E2;
 double *A;
-double *lambdasqrt, *temp, *Fock;
+double *lambdasqrt, *temp, *F, *Dnew, *Fock;
 double Enuc;
 
 // Phi Variables
-
 int *NPOrbE, *NPOrb_x, *NPOrb_y, *NPOrb_z;
 
-// Two Electron Repulsion Integral Variables
 
+// Two Electron Repulsion Integral Variables
 int n;
 
 int main()
 
 {
-    // Definition of pi
-    pi = 4.*atan(1.0);
-    
-    // Atomic Units
-    // ------------
-    L = 1;
-    mass = 1;
-    hbar = 1;
+    double val, enuc, *S, *V, *T, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fockc, *squarerootS, *temporary;
+    double *eps, *Cp, *C, *D, *Dn, sum, Eelec, *Fnew, *EE;
+    int ij,kl;
+    double *Svals, *Svecs, *SqrtSvals, *SqrtS;
+    double ESCF, ESCF_i, deltaE, deltaDD, tolE, tolDD;
+    int iter, itermax;
 
-    // Highest eigenfunction value for N.
-    nmax = 2;
+ 
+    tolE = 1e-7; // Total difference in energy.
+    tolDD = 1e-7; // Total difference in Density Matrix.
+    nmax = 2; // Highest eigenfunction value for N.
+   // dim = nmax*nmax*nmax-1;
+    dim = 26; // Matricies dimensions
+    itermax = 100; // Maximum # of iterations
+    pi = 4.*atan(1.0); // Definition of pi
+    L = 1, mass = 1, hbar = 1; // Atomic Units
+    nelec = 8; // Number of electrons in system.
 
-    // Define dimensions (nmax*nmax*nmax)
-    dim = nmax*nmax*nmax;
-    //dim = 7;
-
-    // Number of electrons in system.
-    nelec = 2; 
-   
-    // total number of orbitals... note we are limiting l<=2 in this case (s, p, and d orbs)
 
     ntotal=0;
-  /*  for (i=1; i<=nmax; i++) {
+
+    /*  for (i=1; i<=nmax; i++) {
         
         if (i<=3) {
             ntotal+= i*i;
@@ -92,9 +91,10 @@ int main()
         else {
             ntotal += 9;
         }
-    } */
-    // ------------------------------------------------------- 
+    } 
+    */
     
+
     // Continue definition of basic parameters
     nocc = nelec / 2.;
     nuno = ntotal - nocc;
@@ -112,22 +112,12 @@ int main()
     // HARTREE FOCK CODE
     // ------------------------------------
 
-    FILE *enucfp, *overlap, *nucatt, *ekin, *EEfp, *nucfp, *nAttract, *kinEnergy, *eeRep;
-
-    
-    double val, enuc, *Sc, *Vc, *Tc, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fockc, *squarerootS, *temporary;
-    double *eps, *Cp, *C, *D, *Dn, sum, Eelec, *Fnew, *EE;
-    int ij,kl;
-    double *Svals, *Svecs, *SqrtSvals, *SqrtS;
-    double ESCF, ESCF_i, deltaE, deltaDD, tolE, tolDD;
-    int iter, itermax;
-
-    itermax = 28;
+    FILE  *enucfp, *overlap, *nucatt, *ekin, *EEfp;
 
     // Initialize HF relevant matricies
     //
-    S = (double *)malloc(dim*dim*sizeof(double)); // A-O Overlap Matrix
-    Hcore = (double *)malloc(dim*dim*sizeof(double)); // Hamiltonian Core for HF
+   // S = (double *)malloc(dim*dim*sizeof(double)); // A-O Overlap Matrix
+  //  Hcore = (double *)malloc(dim*dim*sizeof(double)); // Hamiltonian Core for HF
 
     NPOrb_x = (int *)malloc(nmax*nmax*nmax*sizeof(int)); // X corresponding to phi
     NPOrb_y = (int *)malloc(nmax*nmax*nmax*sizeof(int)); // Y corresponding to phi
@@ -144,292 +134,152 @@ int main()
     temp  = (double *)malloc(dim*dim*sizeof(double)); // Temp matrix
     Fock  = (double *)malloc(dim*dim*sizeof(double)); // Fock matrix
 
-
     n = 50;
    
     // HF H2O INFO
-    Sc = (double *)malloc(dim*dim*sizeof(double));
-    Tc = (double *)malloc(dim*dim*sizeof(double));
-    Vc = (double *)malloc(dim*dim*sizeof(double));
-    Hcorec = (double *)malloc(dim*dim*sizeof(double));
-    lambda = (double *)malloc(dim*sizeof(double));
-    lambdasquareroot = (double *)malloc(dim*dim*sizeof(double));
-    Ls = (double *)malloc(dim*dim*sizeof(double));
-    Fockc = (double *)malloc(dim*dim*sizeof(double));
-    Fnew = (double *)malloc(dim*dim*sizeof(double));
-    squarerootS = (double *)malloc(dim*dim*sizeof(double));
-    temporary = (double *)malloc(dim*dim*sizeof(double));
-    EE = (double *)malloc(dim*dim*dim*dim*sizeof(double));
-    
-    eps = (double *)malloc(dim*sizeof(double));
-    Cp = (double *)malloc(dim*dim*sizeof(double));
-    C = (double *)malloc(dim*dim*sizeof(double));
-
-    D = (double *)malloc(dim*dim*sizeof(double));
-    Dn = (double *)malloc(dim*dim*sizeof(double));
-
+    V     = (double *)malloc(dim*dim*sizeof(double));
+    S     = (double *)malloc(dim*dim*sizeof(double));
+    T     = (double *)malloc(dim*dim*sizeof(double));
+    Hcore = (double *)malloc(dim*dim*sizeof(double));
+    F     = (double *)malloc(dim*dim*sizeof(double));
+    Fnew  = (double *)malloc(dim*dim*sizeof(double));
+    Cp    = (double *)malloc(dim*dim*sizeof(double));
+    C     = (double *)malloc(dim*dim*sizeof(double));
+    D     = (double *)malloc(dim*dim*sizeof(double));
+    Dnew  = (double *)malloc(dim*dim*sizeof(double));
+    eps   = (double *)malloc(dim*sizeof(double));
     Svals = (double *)malloc(dim*sizeof(double));
     SqrtSvals = (double *)malloc(dim*dim*sizeof(double));
     Svecs = (double *)malloc(dim*dim*sizeof(double));
-    SqrtS = (double *)malloc(dim*dim*sizeof(double));	
+    SqrtS = (double *)malloc(dim*dim*sizeof(double));
+    temp  = (double *)malloc(dim*dim*sizeof(double));
+    EE    = (double *)malloc(dim*dim*dim*dim*sizeof(double));
 
-    //---------------------------------------------------------------------------
-    // Step #1: Nuclear Repulsion Energy
-    //---------------------------------------------------------------------------
+    // Read Integral Files for H2O
 
-    // Considered a constant. Can skip this for now?
-    // HF H20, enuc.dat
-    // Can put reading into a function.
-
-    //---------------------------------------------------------------------------
-    // Step #2: AO-Overlap, KE Integrals, Building of Hcore.
-    //--------------------------------------------------------------------------- 
-
-    // CUSTOM:____________________________________________________________________________
-    //------------------------------------------------------------------------------------
-
-    // Overlap (S)
-
-    aOrbital = fopen("Sfp.dat", "w");
-
-    CubicPhi();
-    AtomicOrbitalOverlap();
-    return(0);
-    
-
-    // Self Energy -- doesn't need to be changed.
-    nucfp = fopen("./SelfEnergy.dat", "r");
-    fscanf(nucfp,"%lf",&Enuc);
-
-    // Nuclear Attraction -- doesn't need to be changed.
-    nAttract = fopen("./NucAttraction.dat", "r");
-
-    // Kinetic Energy -- doesn't need to be changed.
-    kinEnergy = fopen("./Kinetic.dat", "r");
-
-    // Electron-Electron Repulsion -- Need to capture the unique values.
-    eeRep = fopen("./ERI.dat", "r");
-
-    // Calculate AO energies
-    // ---------------------
-
-    
-
-    // Electron Repulsion Integrals (EE)
-
-    ERIFormat();
-    ReadEI(dim, eeRep, EE);
-
-    // Write function to get unique values of these.
+   // enucfp = fopen("enuc.dat", "r");
+   // overlap = fopen("s.dat", "r");
+   // nucatt = fopen("v.dat", "r");
+    //ekin = fopen("t.dat", "r");
+    // EEfp = fopen("eri.dat", "r");
 
 
-    for(i=0; i<dim; i++) {
-        for(j=0; j<=i; j++) {
+    // Read Integral Files for Jellium
 
-        // Nuclear Attraction (V)
+    enucfp = fopen("JelliumIntegrals/SelfEnergy.dat", "r");
+    overlap = fopen("overlap.txt", "r");
+    nucatt = fopen("JelliumIntegrals/NucAttraction.dat", "r");
+    ekin = fopen("JelliumIntegrals/Kinetic.dat", "r");
+    EEfp = fopen("JelliumIntegrals/ERI.dat", "r");
 
-        fscanf(nAttract,"%i",&ij);
-        fscanf(nAttract,"%i",&kl);
-        fscanf(nAttract,"%lf",&val);
-        Vc[i*dim+j] = val;
-        Vc[j*dim+i] = val;
-
-        // Kinetic Energy (T)   
-
-        fscanf(kinEnergy, "%lf", &ij);
-        fscanf(kinEnergy, "%lf", &kl);
-        fscanf(kinEnergy, "%lf", &val);
-        Tc[i*dim+j] = val;
-        Tc[j*dim+i] = val;
-
-        Hcorec[i*dim+j] = Tc[i*dim+j] + Vc[i*dim+j];
-        Hcorec[j*dim+i] = Tc[j*dim+i] + Vc[j*dim+i];
-
-    }
-}
+  // Read Nuclear Repulsion
+  fscanf(enucfp, "%lf",&Enuc);
 
 
+  
+  // Read 2-electron integrals
+  ReadEI(dim, EEfp, EE);
 
-    // Calculate KE energy integrals (T matrix)
-    // ----------------------------------------
-    // KineticEnergyIntegrals();
-    
+  // Retrieve unique 2-electron integrals
 
-    // CrawdadFormat(); // Modify to build out the proper hamiltonian for jellium. 
+  // Read 1-electron matrices
+  for (i=0; i<dim; i++) {
+    for (j=0; j<=i; j++) {
 
-    // Print Hamiltonian Core
-    // ----------------------
-     print_matrix(" Hcore ", dim, dim, Hcore, dim); 
-     return(0);
-
-    // Define S matrix
-    // ---------------
-    // print_matrix(" S ", dim, dim, S, dim);
-
-    
-    // WATER: __________________________________________________________________________
-    //----------------------------------------------------------------------------------    
-
-   /* enucfp = fopen("./enuc.dat", "r");
-    overlap = fopen("./s.dat", "r");
-    nucatt = fopen("./v.dat", "r");
-    ekin = fopen("./t.dat", "r");
-    EEfp = fopen("./eri.dat", "r");
-    fscanf(enucfp,"%lf",&Enuc);
-
-
-    for(i=0; i<dim; i++) {
-        for(j=0; j<=i; j++) {
-
-        // Overlap (S)
-
-        fscanf(overlap,"%i",&ij);
-        fscanf(overlap,"%i",&kl);
-        fscanf(overlap,"%lf",&val);
-        Sc[i*dim+j] = val;
-        Sc[j*dim+i] = val;
-
-        // Nuclear Attraction (V)
-
-        fscanf(nucatt,"%i",&ij);
-        fscanf(nucatt,"%i",&kl);
-        fscanf(nucatt,"%lf",&val);
-        Vc[i*dim+j] = val;
-        Vc[j*dim+i] = val;
-
-        // Kinetic Energy (T)   
-
-        fscanf(ekin, "%lf", &ij);
-        fscanf(ekin, "%lf", &kl);
-        fscanf(ekin, "%lf", &val);
-        Tc[i*dim+j] = val;
-        Tc[j*dim+i] = val;
-
-        Hcorec[i*dim+j] = Tc[i*dim+j] + Vc[i*dim+j];
-        Hcorec[j*dim+i] = Tc[j*dim+i] + Vc[j*dim+i];
-
-    }
-} */
-
-    //---------------------------------------------------------------------------
-    // Step #3: Two-Electron Repulsion Integrals
-    //---------------------------------------------------------------------------
-
-    // WATER:____________________________________________________________________________
-    //-----------------------------------------------------------------------------------
-
-    // Read 2-electron integrals
-    ReadEI(dim, EEfp, EE);
-    
-
-    // CUSTOM:____________________________________________________________________________
-    //------------------------------------------------------------------------------------
-
-   
-
-    //---------------------------------------------------------------------------
-    // Step #4: Build the Orthogonalization Matrix
-    //---------------------------------------------------------------------------
-
-    // WATER:____________________________________________________________________________
-    //-----------------------------------------------------------------------------------
-
-    // Diagonalize the overlap matrix.
-     	DIAG_N(dim, dim, S, Svals, Svecs);
-        
-	for (i=0; i<dim; i++) 
-	{
-    	SqrtSvals[i*dim + i] = pow(Svals[i],-1./2);
-	}
-
-    for (i=0; i<dim*dim; i++)
-    {
-        Dn[i] = 0.;
-    }
-
-    // Build the symmetric orthoigonalization matrix: Form S^{-1/2} = L_S s^{-1/2} L_S^t
-	 LoopMM(dim, SqrtSvals, "n", Svecs, "t", temp);
-	 LoopMM(dim, Svecs, "n", temp, "n", SqrtS);
-	// print_matrix(" S^-1/2 ", dim, dim, SqrtS, dim);
-
-    // CUSTOM:____________________________________________________________________________
-    //------------------------------------------------------------------------------------
-
-
-    //---------------------------------------------------------------------------
-    // Step #5: Build the initial guess density matrix
-    //---------------------------------------------------------------------------
-
-
-    // WATER:____________________________________________________________________________
-    //-----------------------------------------------------------------------------------
+      fscanf(nucatt,"%i",&ij);
+      fscanf(nucatt,"%i",&kl);
+      fscanf(nucatt,"%lf",&val);
+      V[i*dim+j] = val;
+      V[j*dim+i] = val;
       
-    // Form an initial (guess) Fock matrix in orthonormal basis using core Hamiltonian as a guess: Fock matrix F = S^{-1/2}^t H_core S^{1/2}
-	LoopMM(dim, Hcore, "n", SqrtS, "n", temp);
-	LoopMM(dim, SqrtS, "t", temp, "n", Fock);
-	print_matrix("  Fock", dim, dim, Fock, dim);
-	
+      fscanf(overlap,"%i",&ij);
+      fscanf(overlap,"%i",&kl);
+      fscanf(overlap,"%lf",&val);
+      S[i*dim+j] = val;
+      S[j*dim+i] = val;
 
-	// Get Guess MO matrix from diagnoalizing Fock matrix:
-	DIAG_N(dim, dim, Fock, eps, Cp);
-	print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
-	
-    // Transform the eigenvectors into the original (non-orthogonal) AO basis.
-   	LoopMM(dim, SqrtS, "n", Cp, "n", C);
+      fscanf(ekin,"%i",&ij);
+      fscanf(ekin,"%i",&kl);
+      fscanf(ekin,"%lf",&val);
+      T[i*dim+j] = val;
+      T[j*dim+i] = val;
 
-	// Build initial density matrix using the occupied MO's: D = sum (m to occ) C * C.
-	BuildDensity(dim, nelec, C, D);
-	print_matrix("  Coefficients", dim, dim, C, dim);
-	print_matrix("  Density Matrix", dim, dim, D, dim);
-
-    // CUSTOM:____________________________________________________________________________
-    //------------------------------------------------------------------------------------
-
-    //---------------------------------------------------------------------------
-    // Step #6: Compute the Initial SCF Energy
-    //---------------------------------------------------------------------------
-	ESCF_i = E_Total(dim, D, Hcore, Fock, Enuc);
-	printf("  Initial E_SCF is %12.10f\n",ESCF);
-
-	int die = 1e9;
-  	iter=0;
-	printf("  ITERATION 0:  RHF ENERGY IS %18.14f\n",ESCF_i);
+    }
+  }
 
 
-    //---------------------------------------------------------------------------
-    // Step #7: Compute the New Fock Matrix
-    //---------------------------------------------------------------------------    
+  buildHamiltonian(T, V);
+  print_matrix(" Hcore ", dim, dim, Hcore, dim);
+ 
 
-    do {
+  print_matrix("  T  ", dim, dim, T, dim);
+  print_matrix("  V ", dim, dim, V, dim);
+  print_matrix("  S  ", dim, dim, S, dim);
+  // Diagonalize overlap 
+  DIAG_N(dim, dim, S, Svals, Svecs); 
+
+  for (i=0; i<dim; i++) {
+ 
+    SqrtSvals[i*dim + i] = pow(Svals[i],-1./2);
+
+  }
+  // Form S^{-1/2} = L_S s^{-1/2} L_S^t
+  LoopMM(dim, SqrtSvals, "n", Svecs, "t", temp);
+  LoopMM(dim, Svecs, "n", temp, "n", SqrtS);
+
+  print_matrix( "S^1/2", dim, dim, SqrtS, dim);
+
+  // Form Fock matrix F = S^{-1/2}^t H_core S^{1/2}
+  LoopMM(dim, Hcore, "n", SqrtS, "n", temp);
+  LoopMM(dim, SqrtS, "t", temp, "n", F);
+
+  print_matrix("  Fock", dim, dim, F, dim);
+
+  //  Get Guess MO matrix from diagonalizing Fock matrix
+  // Diag(F) -> MO Coefficients = vecs, MO energies = vals
+  DIAG_N(dim, dim, F, eps, Cp);
+  print_matrix("  Initial Coefficients", dim, dim, Cp, dim);
+
+  LoopMM(dim, SqrtS, "n", Cp, "n", C);
+
+  BuildDensity(dim,nelec, C, D);
+  print_matrix("  Coefficients", dim, dim, C, dim);
+
+  print_matrix("  Density Matrix", dim, dim, D, dim);
+
+  ESCF_i = E_Total(dim, D, Hcore, F, Enuc);
+  
+  printf("  Initial E_SCF is %12.10f\n",ESCF_i);
+
+  int die = 1;
+  iter=0;
+
+  printf("  ITERATION 0:  RHF ENERGY IS %18.14f\n",ESCF_i);
+  do {
 
     // Update Fock matrix
     UpdateF(dim, D, Hcore, EE, Fnew);
 
     // Form Fock matrix F = S^{-1/2}^t H_core S^{1/2}
     LoopMM(dim, Fnew, "n", SqrtS, "n", temp);
-    LoopMM(dim, SqrtS, "t", temp, "n", Fock);
- //   print_matrix(" Fnew ", dim, dim, Fnew, dim);
+    LoopMM(dim, SqrtS, "t", temp, "n", F);
+
   
     // Diagonalize new Fock matrix
-    DIAG_N(dim, dim, Fock, eps, Cp);
+    DIAG_N(dim, dim, F, eps, Cp);
 
     // Get new MO coefficients
     LoopMM(dim, SqrtS, "n", Cp, "n", C);
-//    print_matrix("  Coefficients", dim, dim, C, dim);
-//   print_matrix(" Initial Coeff ", dim, dim, Cp, dim);
-
-
-//    print_matrix(" Dnew ", dim, dim, Dn, dim);
 
     // Build new Density matrix
-    BuildDensity(dim, 5, C, Dn);
-//    print_matrix("  New Density Matrix ", dim, dim, Dn, dim);
+    BuildDensity(dim, nelec, C, Dnew);
+    //print_matrix("  New Density Matrix ", dim, dim, Dnew, dim);
 
     // Compute new Energy
-    ESCF = E_Total(dim, Dn, Hcore, Fnew, Enuc);
+    ESCF = E_Total(dim, Dnew, Hcore, Fnew, Enuc);
 
     // Get RMS_D for density matrix, copy new density matrix to D array
-    deltaDD = DensityDiff(dim, D, Dn);
+    deltaDD = DensityDiff(dim, D, Dnew);
 
     // get change in energy
     deltaE = ESCF - ESCF_i;
@@ -444,46 +294,8 @@ int main()
 
   }while(die);
 
-    return 0;
 
-
-    /*
-
-    // Diagonalize overlap matrix
-    DIAG_N(dim, dim, S, Svals, Svecs);
-
-    // Cannot diagonalize here, fortran code dependency???
-    // Works in linux...
-
-    for (i = 0; i<dim; i++)
-    {
-        lambdasqrt[i*dim+i] = pow(Svals[i],-0.5);
-        printf(" %12.10f\n",lambdasqrt[i*dim+i]);
-    }
-
-    print_matrix(" lambdasqrt ", dim, dim, lambdasqrt, dim);
-
-    LoopMM(dim, lambdasqrt, "n", Svecs, "t", temp);
-
-    LoopMM(dim, Svecs, "n", temp, "n", sqrtS);
-
-    print_matrix( "S^1/2", dim, dim, sqrtS, dim);
-
-    // Continue from here... 
-
-    */
-    
-    /*
-  
-    LoopMM(dim, Hcore, "n", sqrtS, "n", temp);
-
-    LoopMM(dim, sqrtS, "n", temp, "n", Fock);
-
-    print_matrix(" Fock ", dim, dim, Fock, dim);
-
-    DIAG_N(dim, dim, Fock, Fvals, Fvecs);
-
-  //LoopMM(dim, sqrtS, "n", )
+return 0;
 
     //---------------------------------------------------------------------------
     // Step #6: Compute the Initial SCF Energy
@@ -509,14 +321,12 @@ int main()
     // Step #11: Building of Hamiltonian from HF MO's for PIS
     //---------------------------------------------------------------------------
 
-*/
-
 }
 
 
 
 
-void CrawdadFormat()
+/* void CrawdadFormat()
 {
     int i,j,idx;
     idx = 0;
@@ -540,7 +350,7 @@ do {
 }   while (idx < dim);
 }
 
-
+*/
 
 /* void ERIFormat() 
 {
@@ -607,6 +417,17 @@ void KineticEnergyIntegrals()
 	
 }
 
+void buildHamiltonian(double *Kin, double *Pot) 
+  {
+    for (i=0; i<dim; i++) {
+    for (j=0; j<=i; j++) {
+
+     Hcore[i*dim+j] = Kin[i*dim+j] + Pot[i*dim+j];
+     Hcore[j*dim+i] = Kin[j*dim+i] + Pot[j*dim+i];
+
+    }}
+
+  }
 
 // Complex conjugate of phi(x) * phi(y) integrated over -infty to infty = 1 when x == y and 0 otherwise.
 // Anyway, this is confusing. Thought phi(x) = sqrt(2./L)sin(pi*n*x/L) ?? Well.. thats the energy eigenfunction. Right?
@@ -860,7 +681,7 @@ void ReadEI(int dim, FILE *fp, double *EE) {
     EE[FourDIndx(k,l,j,i,dim)] = val;
     EE[FourDIndx(l,k,j,i,dim)] = val;
   
-	printf(" i=%i j=%i k=%i l=%i val=%f\n",i,j,k,l,val);
+//	printf(" i=%i j=%i k=%i l=%i val=%f\n",i,j,k,l,val);
 }
 
 }

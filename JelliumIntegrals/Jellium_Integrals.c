@@ -196,13 +196,15 @@ int main ( int argc, char *argv[] )
   kinfp = fopen("Kinetic.dat","w");
   selffp = fopen("SelfEnergy.dat","w");
 
+  int orbitalMax = 26;
+
   // Four nested loops to compute lower triange of electron repulsion integrals - roughly have of the non-unique integrals
   // will not be computed, but this is still not exploiting symmetry fully
-  for (int i=0; i<26; i++) {
+  for (int i=0; i<orbitalMax; i++) {
     mu[0] = MO[i][0];
     mu[1] = MO[i][1];
     mu[2] = MO[i][2];
-    for (int j=i; j<26; j++) {
+    for (int j=i; j<orbitalMax; j++) {
       nu[0] = MO[j][0];
       nu[1] = MO[j][1];
       nu[2] = MO[j][2];
@@ -224,11 +226,11 @@ int main ( int argc, char *argv[] )
       fprintf(nucfp, "  %i  %i  %17.14f\n",i+1,j+1,nucval);      
 
       // loop over indices for electron 2       
-      for (int k=0; k<26; k++) {
+      for (int k=0; k<orbitalMax; k++) {
         lam[0] = MO[k][0];
         lam[1] = MO[k][1];
         lam[2] = MO[k][2];
-        for (int l=k; l<26; l++) {
+        for (int l=k; l<orbitalMax; l++) {
           sig[0] = MO[l][0];
           sig[1] = MO[l][1];
           sig[2] = MO[l][2];
@@ -1200,7 +1202,7 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
               // order of indices to get these values is a bit strange, see print statement
               // for example of ordering!
               tempval = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
-              printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],tempval);
+             // printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],tempval);
               eri_val += fac*tempval;
               
 

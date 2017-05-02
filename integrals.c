@@ -78,7 +78,7 @@ int main()
      // Definition of pi
     pi = 4.*atan(1.0);
 
-    nmax = 2;
+    nmax = 4;
 
     CubicPhi();
     TwoERICalc(n, x, w);
@@ -231,6 +231,7 @@ void TwoERICalc(int number, double *xa, double *wa)
 
                   
                     // Store ERI for values in teri array & coords.
+                    bool dup = 0;
 
 
                     if(a != b && c != d && a == c && b == d)
@@ -238,18 +239,44 @@ void TwoERICalc(int number, double *xa, double *wa)
                         for(int i=0; i<index; i++)
                         {
                             // Determines if 1,3,1,3 == 3,1,3,1 b/c same integral. 
-                            if (a == ERIb[i] && b == ERIa[i] && c == ERId[i] && d == ERIc[i])
+
+                            if (a != ERIb[i] && b != ERIa[i] && c != ERId[i] && d != ERIc[i])
                             {
-                                i = index+1;
+
+                               dup = 1;
                             }
-                        }} else if ( a == b && a == c && a == d) 
+
+                        else 
+                        {
+                              dup = 0;
+                              i = index+1;
+                        }
+
+                        }
+
+                    if (dup = 1)
+                    {
+
+                        ERIa[index] = a;
+                        ERIb[index] = b;
+                        ERIc[index] = c;
+                        ERId[index] = d;
+                        teri[index] = ERI(number, xa, wa, adim, bdim, cdim, ddim);
+                        printf(" %i - %i - %i - %i : %f \n",a,b,c,d,teri[index]);
+                        dup = 0;
+                        index++;
+                    }
+
+
+                    } 
+                     else if ( a == b && a == c && a == d) 
                         {
 
                         ERIa[index] = a;
                         ERIb[index] = b;
                         ERIc[index] = c;
                         ERId[index] = d;
-                        teri[index] = 0;
+                        teri[index] = ERI(number, xa, wa, adim, bdim, cdim, ddim);
                         printf(" %i - %i - %i - %i : %f \n",a,b,c,d,teri[index]);
                         index++;
                                
