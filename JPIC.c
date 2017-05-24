@@ -10,7 +10,6 @@
 #include<string.h>
 
 int pi;
-int i,j;
 int dim;
 int nmax;
 double L, mass, hbar;
@@ -57,14 +56,13 @@ int *NPOrbE, *NPOrb_x, *NPOrb_y, *NPOrb_z;
 
 
 // Two Electron Repulsion Integral Variables
-int n;
 
 int main()
 
 {
     double val, enuc, *S, *V, *T, *Hcorec, *lambda, *lambdasquareroot, *Ls, *Fockc, *squarerootS, *temporary;
     double *eps, *Cp, *C, *D, *Dn, sum, Eelec, *Fnew, *EE;
-    int ij,kl;
+    int i, j, k, l, ij,kl;
     double *Svals, *Svecs, *SqrtSvals, *SqrtS;
     double ESCF, ESCF_i, deltaE, deltaDD, tolE, tolDD;
     int iter, itermax;
@@ -72,13 +70,13 @@ int main()
  
     tolE = 1e-7; // Total difference in energy.
     tolDD = 1e-7; // Total difference in Density Matrix.
-    nmax = 2; // Highest eigenfunction value for N.
+    nmax = 3; // Highest eigenfunction value for N.
    // dim = nmax*nmax*nmax-1;
     dim = 26; // Matricies dimensions
     itermax = 100; // Maximum # of iterations
     pi = 4.*atan(1.0); // Definition of pi
     L = 1, mass = 1, hbar = 1; // Atomic Units
-    nelec = 8; // Number of electrons in system.
+    nelec = 2; // Number of electrons in system.
 
 
     ntotal=0;
@@ -134,7 +132,7 @@ int main()
     temp  = (double *)malloc(dim*dim*sizeof(double)); // Temp matrix
     Fock  = (double *)malloc(dim*dim*sizeof(double)); // Fock matrix
 
-    n = 50;
+    //n = 50;
    
     // HF H2O INFO
     V     = (double *)malloc(dim*dim*sizeof(double));
@@ -154,6 +152,42 @@ int main()
     SqrtS = (double *)malloc(dim*dim*sizeof(double));
     temp  = (double *)malloc(dim*dim*sizeof(double));
     EE    = (double *)malloc(dim*dim*dim*dim*sizeof(double));
+
+    // Initialize values to zero!
+    for (i=0; i<dim; i++) {
+
+      eps[i] = 0.;
+      Svals[i] = 0.;
+      for (j=0; j<dim; j++) {
+
+        V[i*dim+j] = 0.;
+        S[i*dim+j] = 0.;
+        T[i*dim+j] = 0.;
+        Hcore[i*dim+j] = 0.;
+        F[i*dim+j] = 0.;
+        Fnew[i*dim+j] = 0.;
+        Cp[i*dim+j] = 0.;
+        C[i*dim+j] = 0.;
+        D[i*dim+j] = 0.;
+        Dnew[i*dim+j] = 0.;
+        SqrtSvals[i*dim+j] = 0.;
+        Svecs[i*dim+j] = 0.;
+        lambdasqrt[i*dim+j] = 0.;
+        sqrtS[i*dim+j] = 0.;
+        temp[i*dim+j] = 0.;
+        Fock[i*dim+j] = 0.;
+       
+        for (k=0; k<dim; k++) {
+
+          for (l=0; l<dim; l++) {
+
+            EE[i*dim*dim*dim+j*dim*dim+k*dim+l] = 0.;
+
+          }
+        }
+      }
+    }
+
 
     // Read Integral Files for H2O
 
@@ -184,7 +218,8 @@ int main()
 
   // Read 1-electron matrices
   for (i=0; i<dim; i++) {
-    for (j=0; j<=i; j++) {
+    S[i*dim+i] = 1.0;
+    for (j=i; j<dim; j++) {
 
       fscanf(nucatt,"%i",&ij);
       fscanf(nucatt,"%i",&kl);
@@ -192,11 +227,12 @@ int main()
       V[i*dim+j] = val;
       V[j*dim+i] = val;
       
-      fscanf(overlap,"%i",&ij);
+      /*fscanf(overlap,"%i",&ij);
       fscanf(overlap,"%i",&kl);
       fscanf(overlap,"%lf",&val);
       S[i*dim+j] = val;
       S[j*dim+i] = val;
+      */
 
       fscanf(ekin,"%i",&ij);
       fscanf(ekin,"%i",&kl);
@@ -215,6 +251,7 @@ int main()
   print_matrix("  T  ", dim, dim, T, dim);
   print_matrix("  V ", dim, dim, V, dim);
   print_matrix("  S  ", dim, dim, S, dim);
+
   // Diagonalize overlap 
   DIAG_N(dim, dim, S, Svals, Svecs); 
 
@@ -242,7 +279,7 @@ int main()
 
   LoopMM(dim, SqrtS, "n", Cp, "n", C);
 
-  BuildDensity(dim,nelec, C, D);
+  BuildDensity(dim,nocc, C, D);
   print_matrix("  Coefficients", dim, dim, C, dim);
 
   print_matrix("  Density Matrix", dim, dim, D, dim);
@@ -268,11 +305,17 @@ int main()
     // Diagonalize new Fock matrix
     DIAG_N(dim, dim, F, eps, Cp);
 
+    for (int J=0; J<dim; J++) {
+
+      printf("  MO %i ENERGY:  %18.14f\n",J+1,eps[J]);
+
+    }
+
     // Get new MO coefficients
     LoopMM(dim, SqrtS, "n", Cp, "n", C);
 
     // Build new Density matrix
-    BuildDensity(dim, nelec, C, Dnew);
+    BuildDensity(dim, nocc, C, Dnew);
     //print_matrix("  New Density Matrix ", dim, dim, Dnew, dim);
 
     // Compute new Energy
@@ -419,8 +462,8 @@ void KineticEnergyIntegrals()
 
 void buildHamiltonian(double *Kin, double *Pot) 
   {
-    for (i=0; i<dim; i++) {
-    for (j=0; j<=i; j++) {
+    for (int i=0; i<dim; i++) {
+    for (int j=0; j<=i; j++) {
 
      Hcore[i*dim+j] = Kin[i*dim+j] + Pot[i*dim+j];
      Hcore[j*dim+i] = Kin[j*dim+i] + Pot[j*dim+i];
