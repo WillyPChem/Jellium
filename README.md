@@ -1,32 +1,19 @@
 Particle in Cube HF Jellium
 
-Hartree Fock is variational method to determine best guess molecular orbitals that correspond to lowest energy expectation value of system. Jellium allows inclusion of electron-electron dynamics, nuclear-electron dynamics, etc. This code corresponds to determining Hartree Fock Molecular Orbitals given arbitary system of atomic orbitals in a cubic basis, then export of those MO's for PIC calculations. Atomic Orbital system is based on nmax, representing highest n value for eigenfunction, and each phi dependent on nx, ny and nz combinations.
+Hartree-Fock Jellium provides a mean-field treatment of valence electrons constrained to a cubic volume and subject to a uniform background positive charge and electron-electron repulsion.  
 
-Our code does the following right now:
-- Determines corresponding phi values for nx, ny and nz's based on nmax. // (ex: Phi(0) = nx=1, ny=1, nz=1).
-- Calculates the atomic orbitals based on nmax. // (if Phi() and Phi()* are same n, AO = 1. if not, then 0.)
-- Spits out kinetic energy integrals based on nmax. // (I think this needs revision) Phi() x KE x Phi() same as AO calculations.
-- Creates initial S (atomic orbital) matrix and Hcore matrix corresponding to crawdad tutorial. 
-- Attempts to build initial Guess matrix.
-- Skeleton for Two electron integral is in place, but not tested yet.
+Current worflow is as follows:
 
+- Generate all 1- and 2-electron integrals using the program Jellium_Integrals.exe in the folder JelliumIntegrals.  Integrals will be written to files:
+	- ERI.dat:           2-electron repulsion integrals
+	- Kinetoc/dat:       1-electron kinetic energy integrals
+	- NucAttraction.dat: 1-electron nuclear attraction integrals
+	- SelfEnergy.dat:    Average repulsion on positive background charge with itself (independant of electron coordinates, just a single number)
+ 
+- Self-consistent field calculation is done using the program JPIC.x in the current directory, which will read the integrals from the JelliumIntegrals folder.
 
-- Looking @ the Crawdad tutorial, our code follows same naming conventions for relevant matricies. So Hcore in Crawdad is Hcore in ours. T is the same, S is the same, etc. F is Fock matrix.
+- SCF calculation closely follows Daniel Crawford's tutorial here: http://sirius.chem.vt.edu/wiki/doku.php?id=crawdad:programming:project3 so much of the notation is consistent
+- The definition of the Fock operator and the SCF Energy follow the convention in Peter Gill's paper on Jellium RHF here: https://github.com/WillyPChem/Jellium/blob/master/Papers/Particle_in_Cube.pdf
+	- Fock operator -> Equation 3.8
+	- SCF Energy ->    Equation 3.3
 
-Phys Chem II Project Code Steps:
-
-1. Phi energy and corresponding nx, ny, & nz variables stored in arrays NPOrbE, NPOrb_x, NPOrb_y, NPOrb_z.
-   Eigenfunction value n corresponds to position in array. So energy of Phi where n=1 is NPOrbE[1].
-
-2. Atomic Orbital Overlap (*A array) is determined based on nmax. AO Overlap is complex conjugate of phi * itself, integrated over
-   all space. Code here assumed based on orthonormal properties, integration results in 1 or 0. Only stores 1 values at this time. Probably not optimal code.
-
-3. KE integrals assume same format as AO Overlap calculations. Complex conjugate of phi * itself with energy operation. 
-   Code here assumed based on orthonormal properties, results in respective energy value or zero.
-   Energy value = hbar*hbar*pi*pi / 2*mass*L*L (nx^2 + ny^2 + nz^2). Believe this is correct..
-
-4. Assumption that initial Hcore for HF only deals with kinetic energy currently in (*T array). In order to use *A and *T respectively
-   with
-   crawdad fxns (diagonalize, print_matrix, etc) , need to format according to it. CrawdadFormat() handles this, zeroing out other values. (Need to get C++ & Fortran to play nicely after here to utilize diagnolize functions. Also discrepancy between energy values based on system... not sure why.)
-
-5. Trial two electron integral code from Peter Gill paper here. Function from Dr. Foley. Formatting of phi values to it. 4 for loops...isn't entire array dim^4? for instance, nmax = 2, so dim = nmax*nmax*nmax which is 8, and then 8*8*8*8 combinations of a,b,c,d. If so, might be difficult to deal with for metal nanoparticles where nmax > 9 etc.. Also, is it possible to exclude some ERI's? If statements since some combos are same value.

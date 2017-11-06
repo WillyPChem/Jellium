@@ -2,7 +2,6 @@
 #include<stdio.h>
 #include<math.h>
 #include<string.h>
-#include"memory.h"
 #include<stdlib.h>
 #include<complex.h>
 #define BIGNUM 1E100
