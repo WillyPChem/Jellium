@@ -1,5 +1,7 @@
 - Contains a program which will (hopefully) compute all 1- and 2-electron integrals + the self energy and store them in files
 
+- To compile, type `make`
+
 - Closely follows reference by Peter Gills here: https://github.com/WillyPChem/Jellium/blob/master/Papers/Particle_in_Cube.pdf
 
 - Integrals are computed in the basis of 3D particle in a cube energy eigenstates (see Eq. 2.2)	
@@ -19,10 +21,4 @@
 	- 1-electron kinetic energy integrals     - symmetry fully exploited  -> Kinetic.dat
 	- Nuclear Self-Energy - treat same as nuclear repulsion in H2O case   -> SelfEnergy.dat
 
-- To compile, type `make`
 
-(2) Give the number of grid points and the start and end of the domain as arguments when you execute the program and run in the background
-
-./JelliumIntegrals.exe 50 0 1 >& OUT.txt &
-
-Go enjoy a cup of coffee, its going to take > 20 minutes!

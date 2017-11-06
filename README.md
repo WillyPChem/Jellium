@@ -4,7 +4,9 @@ Hartree-Fock Jellium provides a mean-field treatment of valence electrons constr
 
 Current worflow is as follows:
 
-- Generate all 1- and 2-electron integrals using the program Jellium_Integrals.exe in the folder JelliumIntegrals.  Integrals will be written to files:
+- Generate all 1- and 2-electron integrals using the program Jellium_Integrals.x in the folder /JelliumIntegrals  
+
+- Integrals will be written to files:
 	- ERI.dat:           2-electron repulsion integrals
 	- Kinetoc/dat:       1-electron kinetic energy integrals
 	- NucAttraction.dat: 1-electron nuclear attraction integrals
