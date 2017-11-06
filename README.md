@@ -14,6 +14,10 @@ Current worflow is as follows:
  
 - Self-consistent field calculation is done using the program JPIC.x in the current directory, which will read the integrals from the JelliumIntegrals folder.
 
+	- To compile JPIC code, type `make`
+	- To run JPIC.x, type `./JPIC.x`
+
+
 - SCF calculation closely follows Daniel Crawford's tutorial here: http://sirius.chem.vt.edu/wiki/doku.php?id=crawdad:programming:project3 so much of the notation is consistent
 - The definition of the Fock operator and the SCF Energy follow the convention in Peter Gill's paper on Jellium RHF here: https://github.com/WillyPChem/Jellium/blob/master/Papers/Particle_in_Cube.pdf
 	- Fock operator -> Equation 3.8
