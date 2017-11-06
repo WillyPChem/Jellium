@@ -9,6 +9,8 @@ Current worflow is as follows:
 	- Kinetoc/dat:       1-electron kinetic energy integrals
 	- NucAttraction.dat: 1-electron nuclear attraction integrals
 	- SelfEnergy.dat:    Average repulsion on positive background charge with itself (independant of electron coordinates, just a single number)
+
+- More details on Integral Code can be found here: https://github.com/WillyPChem/Jellium/blob/master/JelliumIntegrals/README.md 
  
 - Self-consistent field calculation is done using the program JPIC.x in the current directory, which will read the integrals from the JelliumIntegrals folder.
 
@@ -16,4 +18,7 @@ Current worflow is as follows:
 - The definition of the Fock operator and the SCF Energy follow the convention in Peter Gill's paper on Jellium RHF here: https://github.com/WillyPChem/Jellium/blob/master/Papers/Particle_in_Cube.pdf
 	- Fock operator -> Equation 3.8
 	- SCF Energy ->    Equation 3.3
+
+- Current target for SCF calculation is to reproduce the Nelectrons=2, Norbs=26, total energy from Table V in Peter Gill's paper (17.14416 Hartrees)
+
 
