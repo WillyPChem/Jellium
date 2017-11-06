@@ -22,12 +22,12 @@ int DIAG_N(int dim, int number, double *mat, double *en, double *wfn);
 void Diagonalize(double*M,long int dim, double*eigval,double*eigvec);
 void print_matrix( char* desc, int m, int n, double* a, int lna);
 void LoopMM(int dim, double *a, char *transa, double *b, char *transb, double *c);
-double E_Total(int dim, double *D, double *HCore, double *F, double Enuc);
+double E_Total(int nels, int dim, double *D, double *HCore, double *EI, double Enuc);
 void ReadEI(int dim, FILE *fp, double *EE);
 int FourDIndx(int i, int j, int k, int l, int dim);
 double DensityDiff(int dim, double *D, double *Dnew);
 void UpdateF(int dim, double *D, double *Hcore, double *EI, double *Fnew);
-void buildHamiltonian(double *Kin, double *Pot); 
+void buildHCore(int nels,double *Kin, double *Pot); 
 
 
 // Custom cubic HF functions
@@ -201,7 +201,6 @@ int main()
     // Read Integral Files for Jellium
 
     enucfp = fopen("JelliumIntegrals/SelfEnergy.dat", "r");
-    overlap = fopen("overlap.txt", "r");
     nucatt = fopen("JelliumIntegrals/NucAttraction.dat", "r");
     ekin = fopen("JelliumIntegrals/Kinetic.dat", "r");
     EEfp = fopen("JelliumIntegrals/ERI.dat", "r");
@@ -226,13 +225,6 @@ int main()
       fscanf(nucatt,"%lf",&val);
       V[i*dim+j] = val;
       V[j*dim+i] = val;
-      
-      /*fscanf(overlap,"%i",&ij);
-      fscanf(overlap,"%i",&kl);
-      fscanf(overlap,"%lf",&val);
-      S[i*dim+j] = val;
-      S[j*dim+i] = val;
-      */
 
       fscanf(ekin,"%i",&ij);
       fscanf(ekin,"%i",&kl);
@@ -244,7 +236,7 @@ int main()
   }
 
 
-  buildHamiltonian(T, V);
+  buildHCore(nelec,T, V);
   print_matrix(" Hcore ", dim, dim, Hcore, dim);
  
 
@@ -284,7 +276,7 @@ int main()
 
   print_matrix("  Density Matrix", dim, dim, D, dim);
 
-  ESCF_i = E_Total(dim, D, Hcore, F, Enuc);
+  ESCF_i = E_Total(nelec, dim, D, Hcore, EE, Enuc);
   
   printf("  Initial E_SCF is %12.10f\n",ESCF_i);
 
@@ -319,7 +311,7 @@ int main()
     //print_matrix("  New Density Matrix ", dim, dim, Dnew, dim);
 
     // Compute new Energy
-    ESCF = E_Total(dim, Dnew, Hcore, Fnew, Enuc);
+    ESCF = E_Total(nelec, dim, Dnew, Hcore, EE, Enuc);
 
     // Get RMS_D for density matrix, copy new density matrix to D array
     deltaDD = DensityDiff(dim, D, Dnew);
@@ -460,13 +452,13 @@ void KineticEnergyIntegrals()
 	
 }
 
-void buildHamiltonian(double *Kin, double *Pot) 
+void buildHCore(int nels, double *Kin, double *Pot) 
   {
     for (int i=0; i<dim; i++) {
     for (int j=0; j<=i; j++) {
 
-     Hcore[i*dim+j] = Kin[i*dim+j] + Pot[i*dim+j];
-     Hcore[j*dim+i] = Kin[j*dim+i] + Pot[j*dim+i];
+     Hcore[i*dim+j] = Kin[i*dim+j] + nels*Pot[i*dim+j];
+     Hcore[j*dim+i] = Kin[j*dim+i] + nels*Pot[j*dim+i];
 
     }}
 
@@ -735,6 +727,34 @@ int FourDIndx(int i, int j, int k, int l, int dim) {
 
 }
 
+// Follows Peter Gill's notes
+void UpdateF(int dim, double *D, double *Hcore, double *EI, double *Fnew) {
+
+  int a, b, c, d, abcd, adbc;
+  double sum;
+
+  for (a=0; a<dim; a++) {
+    for (b=0; b<dim; b++) {
+
+      sum = 0.;
+
+      for (c=0; c<dim; c++) {
+        for (d=0; d<dim; d++) {
+
+          abcd = FourDIndx(a, b, c, d, dim);
+          adbc = FourDIndx(a, d, b, c, dim);
+
+          sum += D[c*dim+d]*(EI[abcd]-0.5*EI[adbc]);
+
+        }
+      }
+      Fnew[a*dim+b] = Hcore[a*dim+b] + sum;
+
+    }
+  }
+}
+
+/*  Follows CRAWDAD's notes
 void UpdateF(int dim, double *D, double *Hcore, double *EI, double *Fnew) {
 
   int m, n, l, s, mnls, mlns;
@@ -759,7 +779,7 @@ void UpdateF(int dim, double *D, double *Hcore, double *EI, double *Fnew) {
     }
   }
 }
-
+*/
 
 
 
@@ -781,7 +801,40 @@ void BuildDensity(int dim, int occ, double *C, double *D) {
   }
 }
 
-double E_Total(int dim, double *D, double *Hc, double *F, double Enuc) 
+// Follows Peter Gills notes!
+double E_Total(int nels, int dim, double *D, double *Hc, double *EI, double Enuc) {
+  int a, b, c, d, abcd;
+
+  double outter_sum, inner_sum;
+
+  outter_sum = 0.;
+  inner_sum = 0.;
+  for (a=0; a<dim; a++) {
+
+    for (b=0; b<dim; b++) {
+
+      outter_sum += D[a*dim+b]*Hcore[a*dim+b];
+
+      for (c=0; c<dim; c++) {
+      
+        for (d=0; d<dim; d++) {
+  
+          abcd = FourDIndx(a, b, c, d, dim);
+     
+          inner_sum += 0.5*(D[a*dim+b]*D[c*dim+d] - 0.5*D[a*dim+d]*D[b*dim+c])*EI[abcd];
+  
+        }
+      }
+    }
+  }
+
+  return (nels*nels/2.)*Enuc+outter_sum+inner_sum;
+
+
+}
+
+/*  Follows Crawdads notes!
+double E_Total(int nels, int dim, double *D, double *Hc, double *F, double Enuc) 
 {
 
   int m, n;  
@@ -794,5 +847,6 @@ double E_Total(int dim, double *D, double *Hc, double *F, double Enuc)
             sum += D[m*dim+n]*(Hc[m*dim+n] + F[m*dim+n]);
                 }
                   }
-                    return sum + Enuc;
+                    return sum + nels*nels*Enuc/2.;
 }
+*/
