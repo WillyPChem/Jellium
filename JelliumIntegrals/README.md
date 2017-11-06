@@ -13,7 +13,9 @@
 	- Gauss-Legendre quadrature is used to compute Integral in 4.7 over the range 0 to 1
 	- The number of grid points between 0 and 1 is selected at run time by the first argument passed to the program
 	- The lower and upper limits of integration (0 and 1) are selected at runtime by the second and third arguments passed to the program at runtime
-	- `./JelliumIntegrals.x 20 0 1` will evaluate integral 4.7 between 0 and 1 using 20 grid points
+	- `./JelliumIntegrals.x 20 0 1` will evaluate integral (Eq. 4.7) between 0 and 1 using 20 grid points
+	- More gridpoints will lead to tighter convergence of the integrals, but will also increase the runtime
+	- Note that Eq. 4.7 is a 3-D integral, so 2x as many gridpoints leads to 2^3 x as many operations!
 
 - Outputs from the program are written to file
 	- 2-electron repulsion integrals ~ half of all integrals are computed -> ERI.dat
