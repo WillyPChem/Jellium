@@ -1,14 +1,25 @@
-Contains a program which will (hopefully) compute all 1- and 2-electron integrals + the self energy and store them in files.
+- Contains a program which will (hopefully) compute all 1- and 2-electron integrals + the self energy and store them in files
 
-2-electron repulsion integrals ~ half of all integrals are computed -> ERI.dat
-1-electron nuclear attraction integrals - symmetry fully exploited  -> NucAttraction.dat
-1-electron kinetic energy integrals     - symmetry fully exploited  -> Kinetic.dat
-Nuclear Self-Energy - treat same as nuclear repulsion in H2O case   -> SelfEnergy.dat
+- Closely follows reference by Peter Gills here: https://github.com/WillyPChem/Jellium/blob/master/Papers/Particle_in_Cube.pdf
 
-Tips for compling and running 
-(1) Attempt to use compiler optimizers, so compile using
+- Integrals are computed in the basis of 3D particle in a cube energy eigenstates (see Eq. 2.2)	
 
-g++ -O2 -o JelliumIntegrals.exe JelliumIntegrals.c
+- All 1- and 2-electron integrals can be expressed in terms of canonical integrals of the form shown in Eq. 4.2
+
+- Eq. 4.7 and Eq. 4.8 are used to numerically evaluate the cononical integrals
+
+	- Gauss-Legendre quadrature is used to compute Integral in 4.7 over the range 0 to 1
+	- The number of grid points between 0 and 1 is selected at run time by the first argument passed to the program
+	- The lower and upper limits of integration (0 and 1) are selected at runtime by the second and third arguments passed to the program at runtime
+	- `./JelliumIntegrals.x 20 0 1` will evaluate integral 4.7 between 0 and 1 using 20 grid points
+
+- Outputs from the program are written to file
+	- 2-electron repulsion integrals ~ half of all integrals are computed -> ERI.dat
+	- 1-electron nuclear attraction integrals - symmetry fully exploited  -> NucAttraction.dat
+	- 1-electron kinetic energy integrals     - symmetry fully exploited  -> Kinetic.dat
+	- Nuclear Self-Energy - treat same as nuclear repulsion in H2O case   -> SelfEnergy.dat
+
+- To compile, type `make`
 
 (2) Give the number of grid points and the start and end of the domain as arguments when you execute the program and run in the background
 
