@@ -697,8 +697,9 @@ void legendre_handle ( int n, double a, double b )
  *   */
   rescale ( a, b, n, x, w );
 /*
- *   Write the rule to 3 files.
- *   */
+ *   Uncomment to Write the rule to 3 files.
+ *   
+
   sprintf ( output_w, "leg_o%d_w.txt", n );
   sprintf ( output_x, "leg_o%d_x.txt", n );
   sprintf ( output_r, "leg_o%d_r.txt", n );
@@ -711,7 +712,7 @@ void legendre_handle ( int n, double a, double b )
   r8mat_write ( output_w, 1, n, w );
   r8mat_write ( output_x, 1, n, x );
   r8mat_write ( output_r, 1, 2, r );
-
+  */
   free ( r );
   free ( w );
   free ( x );
