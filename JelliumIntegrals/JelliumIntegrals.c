@@ -1203,7 +1203,9 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
               // order of indices to get these values is a bit strange, see print statement
               // for example of ordering!
               tempval = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
-             // printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],tempval);
+
+              // TABLE IV DEBUG LINE!!!!!!
+              //printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],tempval);
               eri_val += fac*tempval;
               
 
