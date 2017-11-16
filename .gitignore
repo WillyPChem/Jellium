@@ -1,4 +1,5 @@
 *.x
+*.o
 *.out
 *.dat
 gmon.out
