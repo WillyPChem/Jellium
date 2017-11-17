@@ -268,8 +268,13 @@ int main ( int argc, char *argv[] )
   for (int px = 0; px < 2*nmax+1; px++) {
       for (int qx = px; qx < 2*nmax+1; qx++) {
 
+          int pq_x = px*(2*nmax+1) + qx;
+
           for (int py = 0; py < 2*nmax+1; py++) {
               for (int qy = py; qy < 2*nmax+1; qy++) {
+
+                  int pq_y = py*(2*nmax+1) + qy;
+                  if ( pq_x > pq_y ) continue;
 
                   for (int pz = 0; pz < 2*nmax+1; pz++) {
                       for (int qz = pz; qz < 2*nmax+1; qz++) {
@@ -280,6 +285,8 @@ int main ( int argc, char *argv[] )
                           double dum = pq_int_new(n, px, py, pz, qx, qy, qz, g_tensor,orbitalMax,sqrt_tensor);
                           
                           int P,Q;
+
+                          // start 
 
                           P = PQmap[px][py][pz];
                           Q = PQmap[qx][qy][qz];
@@ -311,6 +318,40 @@ int main ( int argc, char *argv[] )
 
                           P = PQmap[qx][qy][qz];
                           Q = PQmap[px][py][pz];
+                          PQ[P][Q] = dum;
+
+                          // pxqx - pyqy
+
+                          P = PQmap[py][px][pz];
+                          Q = PQmap[qy][qx][qz];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[py][qx][pz];
+                          Q = PQmap[qy][px][qz];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][px][pz];
+                          Q = PQmap[py][qx][qz];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][qx][pz];
+                          Q = PQmap[py][px][qz];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[py][px][qz];
+                          Q = PQmap[qy][qx][pz];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[py][qx][qz];
+                          Q = PQmap[qy][px][pz];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][px][qz];
+                          Q = PQmap[py][qx][pz];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][qx][qz];
+                          Q = PQmap[py][px][pz];
                           PQ[P][Q] = dum;
 
                       }
