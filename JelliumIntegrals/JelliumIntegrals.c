@@ -279,6 +279,9 @@ int main ( int argc, char *argv[] )
                   for (int pz = 0; pz < 2*nmax+1; pz++) {
                       for (int qz = pz; qz < 2*nmax+1; qz++) {
 
+                          int pq_z = pz*(2*nmax+1) + qz;
+                          if ( pq_y > pq_z ) continue;
+
 
                           //if ( P > Q ) continue;
 
@@ -352,6 +355,142 @@ int main ( int argc, char *argv[] )
 
                           P = PQmap[qy][qx][qz];
                           Q = PQmap[py][px][pz];
+                          PQ[P][Q] = dum;
+
+                          // now begins pxqx < pyqy < pzqz
+
+                          P = PQmap[pz][px][py];
+                          Q = PQmap[qz][qx][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[pz][qx][py];
+                          Q = PQmap[qz][px][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[pz][px][qy];
+                          Q = PQmap[qz][qx][py];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[pz][qx][qy];
+                          Q = PQmap[qz][px][py];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][px][py];
+                          Q = PQmap[pz][qx][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][qx][py];
+                          Q = PQmap[pz][px][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][px][qy];
+                          Q = PQmap[pz][qx][py];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][qx][qy];
+                          Q = PQmap[pz][px][py];
+                          PQ[P][Q] = dum;
+
+                          // pxqx - pyqy
+
+                          P = PQmap[pz][py][px];
+                          Q = PQmap[qz][qy][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[pz][py][qx];
+                          Q = PQmap[qz][qy][px];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[pz][qy][px];
+                          Q = PQmap[qz][py][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[pz][qy][qx];
+                          Q = PQmap[qz][py][px];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][py][px];
+                          Q = PQmap[pz][qy][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][py][qx];
+                          Q = PQmap[pz][qy][px];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][qy][px];
+                          Q = PQmap[pz][py][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qz][qy][qx];
+                          Q = PQmap[pz][py][px];
+                          PQ[P][Q] = dum;
+
+                          // now begins last set of 16
+
+                          P = PQmap[px][pz][py];
+                          Q = PQmap[qx][qz][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qx][pz][py];
+                          Q = PQmap[px][qz][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[px][pz][qy];
+                          Q = PQmap[qx][qz][py];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qx][pz][qy];
+                          Q = PQmap[px][qz][py];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[px][qz][py];
+                          Q = PQmap[qx][pz][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qx][qz][py];
+                          Q = PQmap[px][pz][qy];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[px][qz][qy];
+                          Q = PQmap[qx][pz][py];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qx][qz][qy];
+                          Q = PQmap[px][pz][py];
+                          PQ[P][Q] = dum;
+
+                          // pxqx - pyqy
+
+                          P = PQmap[py][pz][px];
+                          Q = PQmap[qy][qz][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[py][pz][qx];
+                          Q = PQmap[qy][qz][px];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][pz][px];
+                          Q = PQmap[py][qz][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][pz][qx];
+                          Q = PQmap[py][qz][px];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[py][qz][px];
+                          Q = PQmap[qy][pz][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[py][qz][qx];
+                          Q = PQmap[qy][pz][px];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][qz][px];
+                          Q = PQmap[py][pz][qx];
+                          PQ[P][Q] = dum;
+
+                          P = PQmap[qy][qz][qx];
+                          Q = PQmap[py][pz][px];
                           PQ[P][Q] = dum;
 
                       }
