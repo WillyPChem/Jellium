@@ -201,7 +201,7 @@ int main ( int argc, char *argv[] )
 
   int orbitalMax = 26;
 
-  // build g tensor g[npq] 
+  // build g tensor g[npq] * w[n]
   printf("\n");
   printf("    build g tensor......."); fflush(stdout);
   double * g_tensor = (double*)malloc(n * orbitalMax * orbitalMax * sizeof(double));
@@ -210,7 +210,7 @@ int main ( int argc, char *argv[] )
       double xval = x[pt];
       for (int p = 0; p < orbitalMax; p++) {
           for (int q = 0; q < orbitalMax; q++) {
-              g_tensor[pt*orbitalMax*orbitalMax+p*orbitalMax+q] = g_pq(p, q, xval);
+              g_tensor[pt*orbitalMax*orbitalMax+p*orbitalMax+q] = g_pq(p, q, xval) * w[pt];
           }
       }
   }
@@ -226,7 +226,7 @@ int main ( int argc, char *argv[] )
           for (int k = 0; k < n; k++) {
               double zval = x[k];
               double val = sqrt(xval*xval+yval*yval+zval*zval);
-              sqrt_tensor[i*n*n + j*n + k] = val;
+              sqrt_tensor[i*n*n + j*n + k] = 1.0/val;
           }
       }
   }
@@ -1404,20 +1404,18 @@ double pq_int_new(int dim, double *w, int px, int py, int pz, int qx, int qy, in
 
     for (int i = 0; i < dim; i++) {
 
-        double wx = w[i];
+        //double wx = w[i];
         double gx = g_tensor[i * orbitalMax * orbitalMax + px * orbitalMax + qx];
 
         for (int j = 0; j < dim; j++) {
 
-            double wxwy = wx * w[j];
             double gxgy = gx * g_tensor[j * orbitalMax * orbitalMax + py * orbitalMax + qy];
 
             for (int k = 0; k < dim; k++) {
 
-                double wxwywz = wxwy * w[k];
                 double gxgygz = gxgy * g_tensor[k * orbitalMax * orbitalMax + pz * orbitalMax + qz];
 
-                sum += gxgygz * wxwywz / sqrt_tensor[i*dim*dim + j*dim + k];
+                sum += gxgygz * sqrt_tensor[i*dim*dim + j*dim + k];
 
                 //printf("  sum %f  x %f  y %f  z %f\n",sum, x, y, z);
             }
