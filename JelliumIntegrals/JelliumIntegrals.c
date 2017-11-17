@@ -2,6 +2,7 @@
 # include <stdio.h>
 # include <math.h>
 # include <time.h>
+# include <string.h>
 
 //int main ( int argc, char *argv[] );
 // Gauss-Legendre quadrature functions
@@ -20,8 +21,10 @@ double wtime ( );
 
 //  Electron integral functions
 double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
+double ERI_new(int dim, double *xa, double *w, double *a, double *b, double *c, double *d, double * g_tensor, int orbitalMax, double * sqrt_tensor);
 double g_pq(double p, double q, double r);
 double pq_int(int dim, double *x, double *w, double px, double py, double pz, double qx, double qy, double qz);
+double pq_int_new(int dim, double *w, int px, int py, int pz, int qx, int qy, int qz, double * g_tensor,int orbitalMax, double * sqrt_tensor);
 double E0_Int(int dim, double *xa, double *w);
 double Vab_Int(int dim, double *xa, double *w, double *a, double *b);
 
@@ -198,52 +201,94 @@ int main ( int argc, char *argv[] )
 
   int orbitalMax = 26;
 
+  // build g tensor g[npq] 
+  printf("\n");
+  printf("    build g tensor......."); fflush(stdout);
+  double * g_tensor = (double*)malloc(n * orbitalMax * orbitalMax * sizeof(double));
+  memset((void*)g_tensor,'\0',n * orbitalMax * orbitalMax * sizeof(double));
+  for (int pt = 0; pt < n; pt++) {
+      double xval = x[pt];
+      for (int p = 0; p < orbitalMax; p++) {
+          for (int q = 0; q < orbitalMax; q++) {
+              g_tensor[pt*orbitalMax*orbitalMax+p*orbitalMax+q] = g_pq(p, q, xval);
+          }
+      }
+  }
+  printf("done.\n");
+
+  // build sqrt(x*x+y*y+z*z)
+  printf("    build sqrt tensor...."); fflush(stdout);
+  double * sqrt_tensor = (double*)malloc(n*n*n*sizeof(double));
+  for (int i = 0; i < n; i++) {
+      double xval = x[i];
+      for (int j = 0; j < n; j++) {
+          double yval = x[j];
+          for (int k = 0; k < n; k++) {
+              double zval = x[k];
+              double val = sqrt(xval*xval+yval*yval+zval*zval);
+              sqrt_tensor[i*n*n + j*n + k] = val;
+          }
+      }
+  }
+  printf("done.\n");
+
   // Four nested loops to compute lower triange of electron repulsion integrals - roughly have of the non-unique integrals
   // will not be computed, but this is still not exploiting symmetry fully
+  printf("    build ERIs...........");fflush(stdout);
+  int start = clock();
   for (int i=0; i<orbitalMax; i++) {
-    mu[0] = MO[i][0];
-    mu[1] = MO[i][1];
-    mu[2] = MO[i][2];
-    for (int j=i; j<orbitalMax; j++) {
-      nu[0] = MO[j][0];
-      nu[1] = MO[j][1];
-      nu[2] = MO[j][2];
+      mu[0] = MO[i][0];
+      mu[1] = MO[i][1];
+      mu[2] = MO[i][2];
+      for (int j=i; j<orbitalMax; j++) {
+          nu[0] = MO[j][0];
+          nu[1] = MO[j][1];
+          nu[2] = MO[j][2];
 
-      // Lower triangle of 1-electron integrals will be computed, fully exploiting symmetry (I think!)
-      // Kinetic Energy Integrals - already computed and stored in ORBE vector    
-      if (i==j) { 
-        kinval = 0.5*ORBE[i];
-      }
-      else {
-        kinval = 0.;
-      }
-      // Print Kinetic Energy Integral to file
-      fprintf(kinfp,"  %i  %i  %17.14f\n",i+1,j+1,kinval);
+          // Lower triangle of 1-electron integrals will be computed, fully exploiting symmetry (I think!)
+          // Kinetic Energy Integrals - already computed and stored in ORBE vector    
+          if (i==j) { 
+              kinval = 0.5*ORBE[i];
+          }
+          else {
+              kinval = 0.;
+          }
+          // Print Kinetic Energy Integral to file
+          fprintf(kinfp,"  %i  %i  %17.14f\n",i+1,j+1,kinval);
 
-      // Nuclear-attraction Integrals
-      nucval = Vab_Int(n, x, w, mu, nu);
-      // Print Nuclear-attraction integral to file
-      fprintf(nucfp, "  %i  %i  %17.14f\n",i+1,j+1,nucval);      
+          // Nuclear-attraction Integrals
+          nucval = Vab_Int(n, x, w, mu, nu);
+          // Print Nuclear-attraction integral to file
+          fprintf(nucfp, "  %i  %i  %17.14f\n",i+1,j+1,nucval);      
 
-      // loop over indices for electron 2       
-      for (int k=0; k<orbitalMax; k++) {
-        lam[0] = MO[k][0];
-        lam[1] = MO[k][1];
-        lam[2] = MO[k][2];
-        for (int l=k; l<orbitalMax; l++) {
-          sig[0] = MO[l][0];
-          sig[1] = MO[l][1];
-          sig[2] = MO[l][2];
+          // loop over indices for electron 2       
+          for (int k=0; k<orbitalMax; k++) {
+              lam[0] = MO[k][0];
+              lam[1] = MO[k][1];
+              lam[2] = MO[k][2];
+              for (int l=k; l<orbitalMax; l++) {
+                  sig[0] = MO[l][0];
+                  sig[1] = MO[l][1];
+                  sig[2] = MO[l][2];
    
-          // Compute 2-electron integral
-          erival = ERI(n, x, w, mu, nu, lam, sig);
-          // Print ERI to file
-          fprintf(erifp," %i  %i  %i  %i  %17.14f\n",i+1,j+1,k+1,l+1,erival);
+                  // Compute 2-electron integral
+                  erival = ERI_new(n, x, w, mu, nu, lam, sig, g_tensor, orbitalMax, sqrt_tensor);
+                  //double dum = ERI(n, x, w, mu, nu, lam, sig);
+                  //if ( fabs(erival - dum) > 1e-14 ) {
+                  //    printf("uh-oh: %20.12lf %20.12lf\n",erival,dum);
+                  //}
 
-        }
+                  // Print ERI to file
+                  fprintf(erifp," %i  %i  %i  %i  %17.14f\n",i+1,j+1,k+1,l+1,erival);
+              }
+          }
       }
-    }
   }
+  int end = clock();
+  printf("done.\n");fflush(stdout);
+  printf("\n");
+  printf("    total time: %12.6f\n",(double)(end-start)/CLOCKS_PER_SEC); fflush(stdout);
+  printf("\n");
 
   // Compute self energy
   selfval = E0_Int(n, x, w);
@@ -1228,6 +1273,82 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 
 }
 
+double ERI_new(int dim, double *xa, double *w, double *a, double *b, double *c, double *d,double * g_tensor, int orbitalMax, double * sqrt_tensor) {
+
+  int * x1 = (int *)malloc(3*sizeof(int));
+  int * x2 = (int *)malloc(3*sizeof(int));
+  int * y1 = (int *)malloc(3*sizeof(int));
+  int * y2 = (int *)malloc(3*sizeof(int));
+  int * z1 = (int *)malloc(3*sizeof(int));
+  int * z2 = (int *)malloc(3*sizeof(int));
+
+  //x1[0] = ax-bx, x1[1] = ax+bx
+  x1[0] = (int)(a[0] - b[0]);
+  x1[1] = (int)(a[0] + b[0]);
+  y1[0] = (int)(a[1] - b[1]);
+  y1[1] = (int)(a[1] + b[1]);
+  z1[0] = (int)(a[2] - b[2]);
+  z1[1] = (int)(a[2] + b[2]);
+
+  //x1[0] = cx-dx, x1[1] = cx+dx
+  x2[0] = (int)(c[0] - d[0]);
+  x2[1] = (int)(c[0] + d[0]);
+  y2[0] = (int)(c[1] - d[1]);
+  y2[1] = (int)(c[1] + d[1]);
+  z2[0] = (int)(c[2] - d[2]);
+  z2[1] = (int)(c[2] + d[2]);
+
+  // Generate all combinations of phi_a phi_b phi_c phi_d in expanded cosine form
+
+  double eri_val = 0.0;
+
+  for (int i = 0; i < 2; i++) {
+      int faci = (int)pow(-1,i);
+      for (int j = 0; j < 2; j++) {
+          int facij = faci * (int)pow(-1,j);
+          for (int k = 0; k < 2; k++) {
+              int facijk = facij * (int)pow(-1,k);
+              for (int l = 0; l < 2; l++) { 
+                  int facijkl = facijk * (int)pow(-1,l);
+                  for (int m = 0; m < 2; m++) {
+                      int facijklm = facijkl * (int)pow(-1,m);
+                      for (int n = 0; n < 2; n++) {
+
+                          int facijklmn = facijklm * (int)pow(-1,n);
+   
+                          // Uncomment to see the functions being integrated in each call to pq_int 
+                          //printf(" + %f Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] Cos[%s] \n",
+                          //fac,cx1[n],cx2[m],cy1[l],cy2[k],cz1[j],cz2[i]);
+                          // recall pq_int args are -> dim, *xa, *w, px, py, pz, qx, qy, qz
+                          // order of indices to get these values is a bit strange, see print statement
+                          // for example of ordering!
+
+                          //double dum = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
+                          double dum = pq_int_new(dim, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],g_tensor,orbitalMax,sqrt_tensor);
+
+                          // TABLE IV DEBUG LINE!!!!!!
+                          //printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],dum);
+                          eri_val += facijklmn * dum;
+
+                      }
+                  } 
+              }
+          }
+      }
+  }
+
+ 
+  free(x1);
+  free(x2);
+  free(y1);
+  free(y2);
+  free(z1);
+  free(z2);
+
+  return eri_val;
+
+}
+
 // This function implements Eq. 4.7 and 4.8 in Peter Gills paper on 2-electrons in a cube
 // Gauss-Legendre quadrature is used for the 3d integral on the range 0->1 for x, y, and z
 // int dim is the number of points on this grid, double *xa is a vector containing the actual points on this grid, and
@@ -1242,7 +1363,6 @@ double pq_int(int dim, double *xa, double *w, double px, double py, double pz, d
   double gx, gy, gz;
 
   if (px<0 || qx<0 || py<0 || qy<0 || pz<0 || qz<0) {
-
   return 0.;
   } 
 
@@ -1270,6 +1390,42 @@ double pq_int(int dim, double *xa, double *w, double px, double py, double pz, d
 
   return (8./pi)*sum;
   }
+}
+
+double pq_int_new(int dim, double *w, int px, int py, int pz, int qx, int qy, int qz, double * g_tensor, int orbitalMax, double * sqrt_tensor) {
+
+    if (px<0 || qx<0 || py<0 || qy<0 || pz<0 || qz<0) {
+
+        return 0.;
+
+    }
+
+    double sum = 0.0;
+
+    for (int i = 0; i < dim; i++) {
+
+        double wx = w[i];
+        double gx = g_tensor[i * orbitalMax * orbitalMax + px * orbitalMax + qx];
+
+        for (int j = 0; j < dim; j++) {
+
+            double wxwy = wx * w[j];
+            double gxgy = gx * g_tensor[j * orbitalMax * orbitalMax + py * orbitalMax + qy];
+
+            for (int k = 0; k < dim; k++) {
+
+                double wxwywz = wxwy * w[k];
+                double gxgygz = gxgy * g_tensor[k * orbitalMax * orbitalMax + pz * orbitalMax + qz];
+
+                sum += gxgygz * wxwywz / sqrt_tensor[i*dim*dim + j*dim + k];
+
+                //printf("  sum %f  x %f  y %f  z %f\n",sum, x, y, z);
+            }
+        }
+    }
+
+    return 8.0 * sum / M_PI;
+
 }
 
 /* 
@@ -1366,9 +1522,9 @@ for (i=0; i<(norbs*norbs*norbs); i++) {
   printf(" exit successful \n");
 
 
-  for (i=0; i<(norbs*norbs*norbs); i++) {
-    printf("  Psi( %i , %i, %i ) %i\n",MO[i][0],MO[i][1],MO[i][2],E[i]);
-  }
+//  for (i=0; i<(norbs*norbs*norbs); i++) {
+//    printf("  Psi( %i , %i, %i ) %i\n",MO[i][0],MO[i][1],MO[i][2],E[i]);
+//  }
 
 }
 
