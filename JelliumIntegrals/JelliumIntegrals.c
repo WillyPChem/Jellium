@@ -21,10 +21,10 @@ double wtime ( );
 
 //  Electron integral functions
 double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
-double ERI_new(int dim, double *xa, double *w, double *a, double *b, double *c, double *d, double * g_tensor, int orbitalMax, double * sqrt_tensor);
+double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d, double * g_tensor, int orbitalMax, double * sqrt_tensor);
 double g_pq(double p, double q, double r);
 double pq_int(int dim, double *x, double *w, double px, double py, double pz, double qx, double qy, double qz);
-double pq_int_new(int dim, double *w, int px, int py, int pz, int qx, int qy, int qz, double * g_tensor,int orbitalMax, double * sqrt_tensor);
+double pq_int_new(int dim, int px, int py, int pz, int qx, int qy, int qz, double * g_tensor,int orbitalMax, double * sqrt_tensor);
 double E0_Int(int dim, double *xa, double *w);
 double Vab_Int(int dim, double *xa, double *w, double *a, double *b);
 
@@ -272,7 +272,7 @@ int main ( int argc, char *argv[] )
                   sig[2] = MO[l][2];
    
                   // Compute 2-electron integral
-                  erival = ERI_new(n, x, w, mu, nu, lam, sig, g_tensor, orbitalMax, sqrt_tensor);
+                  erival = ERI_new(n, x, mu, nu, lam, sig, g_tensor, orbitalMax, sqrt_tensor);
                   //double dum = ERI(n, x, w, mu, nu, lam, sig);
                   //if ( fabs(erival - dum) > 1e-14 ) {
                   //    printf("uh-oh: %20.12lf %20.12lf\n",erival,dum);
@@ -1273,7 +1273,7 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 
 }
 
-double ERI_new(int dim, double *xa, double *w, double *a, double *b, double *c, double *d,double * g_tensor, int orbitalMax, double * sqrt_tensor) {
+double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d,double * g_tensor, int orbitalMax, double * sqrt_tensor) {
 
   int * x1 = (int *)malloc(3*sizeof(int));
   int * x2 = (int *)malloc(3*sizeof(int));
@@ -1324,7 +1324,7 @@ double ERI_new(int dim, double *xa, double *w, double *a, double *b, double *c, 
                           // for example of ordering!
 
                           //double dum = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
-                          double dum = pq_int_new(dim, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],g_tensor,orbitalMax,sqrt_tensor);
+                          double dum = pq_int_new(dim, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],g_tensor,orbitalMax,sqrt_tensor);
 
                           // TABLE IV DEBUG LINE!!!!!!
                           //printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],dum);
@@ -1392,7 +1392,7 @@ double pq_int(int dim, double *xa, double *w, double px, double py, double pz, d
   }
 }
 
-double pq_int_new(int dim, double *w, int px, int py, int pz, int qx, int qy, int qz, double * g_tensor, int orbitalMax, double * sqrt_tensor) {
+double pq_int_new(int dim, int px, int py, int pz, int qx, int qy, int qz, double * g_tensor, int orbitalMax, double * sqrt_tensor) {
 
     if (px<0 || qx<0 || py<0 || qy<0 || pz<0 || qz<0) {
 
@@ -1404,7 +1404,6 @@ double pq_int_new(int dim, double *w, int px, int py, int pz, int qx, int qy, in
 
     for (int i = 0; i < dim; i++) {
 
-        //double wx = w[i];
         double gx = g_tensor[i * orbitalMax * orbitalMax + px * orbitalMax + qx];
 
         for (int j = 0; j < dim; j++) {
