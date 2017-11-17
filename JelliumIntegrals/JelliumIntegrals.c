@@ -21,7 +21,7 @@ double wtime ( );
 
 //  Electron integral functions
 double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, double *d);
-double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d, double * g_tensor, int orbitalMax, double * sqrt_tensor);
+double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d, double * g_tensor, int orbitalMax, double * sqrt_tensor, double ** PQ, int *** PQmap);
 double g_pq(double p, double q, double r);
 double pq_int(int dim, double *x, double *w, double px, double py, double pz, double qx, double qy, double qz);
 double pq_int_new(int dim, int px, int py, int pz, int qx, int qy, int qz, double * g_tensor,int orbitalMax, double * sqrt_tensor);
@@ -182,6 +182,8 @@ int main ( int argc, char *argv[] )
   ORBE = VEC_INT(3*nmax*nmax*nmax);
   MO = MAT_INT(3*nmax*nmax*nmax,3);
 
+  int orbitalMax = 26;
+
   OrderPsis3D(nmax, ORBE, MO);
 
   //  Constructe grid and weights, store them to the vectors x and w, respectively.
@@ -198,8 +200,6 @@ int main ( int argc, char *argv[] )
   nucfp = fopen("NucAttraction.dat","w");
   kinfp = fopen("Kinetic.dat","w");
   selffp = fopen("SelfEnergy.dat","w");
-
-  int orbitalMax = 26;
 
   // build g tensor g[npq] * w[n]
   printf("\n");
@@ -232,6 +232,67 @@ int main ( int argc, char *argv[] )
   }
   printf("done.\n");
 
+
+  // now, compute (P|Q)
+  printf("    build (P|Q).........."); fflush(stdout);
+  int ***PQmap = (int ***)malloc((2*nmax+1)*sizeof(int**));
+  for (int i = 0; i < 2*nmax+1; i++) {
+      PQmap[i] = (int **)malloc((2*nmax+1)*sizeof(int*));
+      for (int j = 0; j < 2*nmax+1; j++) {
+          PQmap[i][j] = (int *)malloc((2*nmax+1)*sizeof(int));
+          for (int k = 0; k < 2*nmax+1; k++) {
+              PQmap[i][j][k] = -999;
+          }
+      }
+  }
+  int Pdim = 0;
+  for (int px = 0; px < 2*nmax+1; px++) {
+      for (int py = 0; py < 2*nmax+1; py++) {
+          for (int pz = 0; pz < 2*nmax+1; pz++) {
+              PQmap[px][py][pz] = Pdim;
+              Pdim++;
+          }
+      }
+  }
+
+
+  int start_pq = clock();
+  double ** PQ = (double**)malloc(Pdim * sizeof(double*));
+  for (int p = 0; p < Pdim; p++) {
+      PQ[p] = (double*)malloc(Pdim * sizeof(double));
+      for (int q = 0; q < Pdim; q++) {
+          PQ[p][q] = 0.0;
+      }
+  }
+  for (int px = 0; px < 2*nmax+1; px++) {
+      for (int py = 0; py < 2*nmax+1; py++) {
+          for (int pz = 0; pz < 2*nmax+1; pz++) {
+              for (int qx = 0; qx < 2*nmax+1; qx++) {
+                  for (int qy = 0; qy < 2*nmax+1; qy++) {
+                      for (int qz = 0; qz < 2*nmax+1; qz++) {
+
+                          int P = PQmap[px][py][pz];
+                          int Q = PQmap[qx][qy][qz];
+                          if ( P > Q ) continue;
+
+                          double dum = pq_int_new(n, px, py, pz, qx, qy, qz, g_tensor,orbitalMax,sqrt_tensor);
+
+                          PQ[P][Q] = dum;
+                          PQ[Q][P] = dum;
+
+                      }
+                  }
+              }
+          }
+      }
+  }
+  int end_pq = clock();
+  printf("done.\n");fflush(stdout);
+  printf("\n");
+  printf("    time for (P|Q) construction: %12.6f\n",(double)(end_pq-start_pq)/CLOCKS_PER_SEC); fflush(stdout);
+  printf("\n");
+  
+
   // Four nested loops to compute lower triange of electron repulsion integrals - roughly have of the non-unique integrals
   // will not be computed, but this is still not exploiting symmetry fully
   printf("    build ERIs...........");fflush(stdout);
@@ -240,6 +301,7 @@ int main ( int argc, char *argv[] )
       mu[0] = MO[i][0];
       mu[1] = MO[i][1];
       mu[2] = MO[i][2];
+
       for (int j=i; j<orbitalMax; j++) {
           nu[0] = MO[j][0];
           nu[1] = MO[j][1];
@@ -272,10 +334,12 @@ int main ( int argc, char *argv[] )
                   sig[2] = MO[l][2];
    
                   // Compute 2-electron integral
-                  erival = ERI_new(n, x, mu, nu, lam, sig, g_tensor, orbitalMax, sqrt_tensor);
+                  erival = ERI_new(n, x, mu, nu, lam, sig, g_tensor, orbitalMax, sqrt_tensor, PQ, PQmap);
                   //double dum = ERI(n, x, w, mu, nu, lam, sig);
                   //if ( fabs(erival - dum) > 1e-14 ) {
-                  //    printf("uh-oh: %20.12lf %20.12lf\n",erival,dum);
+                  //    printf("uh-oh. %20.12lf %20.12lf\n",erival,dum);
+                  //}else {
+                  //    //printf("sweet! %20.12lf %20.12lf\n",erival,dum);
                   //}
 
                   // Print ERI to file
@@ -287,7 +351,7 @@ int main ( int argc, char *argv[] )
   int end = clock();
   printf("done.\n");fflush(stdout);
   printf("\n");
-  printf("    total time: %12.6f\n",(double)(end-start)/CLOCKS_PER_SEC); fflush(stdout);
+  printf("    time for eri construction:   %12.6f\n",(double)(end-start)/CLOCKS_PER_SEC); fflush(stdout);
   printf("\n");
 
   // Compute self energy
@@ -1273,7 +1337,7 @@ double ERI(int dim, double *xa, double *w, double *a, double *b, double *c, doub
 
 }
 
-double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d,double * g_tensor, int orbitalMax, double * sqrt_tensor) {
+double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d,double * g_tensor, int orbitalMax, double * sqrt_tensor, double ** PQ, int *** PQmap) {
 
   int * x1 = (int *)malloc(3*sizeof(int));
   int * x2 = (int *)malloc(3*sizeof(int));
@@ -1303,17 +1367,33 @@ double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d,d
   double eri_val = 0.0;
 
   for (int i = 0; i < 2; i++) {
+
+      if ( z2[i] < 0 ) continue;
       int faci = (int)pow(-1,i);
+
       for (int j = 0; j < 2; j++) {
+
+          if ( z1[j] < 0 ) continue;
           int facij = faci * (int)pow(-1,j);
+
           for (int k = 0; k < 2; k++) {
+
+              if ( y2[k] < 0 ) continue;
               int facijk = facij * (int)pow(-1,k);
+
               for (int l = 0; l < 2; l++) { 
+
+                  if ( y1[l] < 0 ) continue;
                   int facijkl = facijk * (int)pow(-1,l);
+
                   for (int m = 0; m < 2; m++) {
+
+                      if ( x2[m] < 0 ) continue;
                       int facijklm = facijkl * (int)pow(-1,m);
+
                       for (int n = 0; n < 2; n++) {
 
+                          if ( x1[n] < 0 ) continue;
                           int facijklmn = facijklm * (int)pow(-1,n);
    
                           // Uncomment to see the functions being integrated in each call to pq_int 
@@ -1324,7 +1404,20 @@ double ERI_new(int dim, double *xa, double *a, double *b, double *c, double *d,d
                           // for example of ordering!
 
                           //double dum = pq_int(dim, xa, w, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i]);
-                          double dum = pq_int_new(dim, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],g_tensor,orbitalMax,sqrt_tensor);
+
+                          int P = PQmap[ x1[n] ][ y1[l] ][ z1[j] ];
+                          int Q = PQmap[ x2[m] ][ y2[k] ][ z2[i] ];
+                          if ( P == -999 || Q == -999 ) {
+                              printf("\n");
+                              printf("    well, something is wrong with the indexing.\n");
+                              printf("    %5i %5i\n",P,Q);
+                              printf("    %5i %5i %5i; %5i %5i %5i\n",x1[n],y1[l],z1[j],x2[m],y2[k],z2[i]);
+                              printf("\n");
+                              exit(1);
+                          }
+                          double dum = PQ[P][Q];
+
+                          //double dum = pq_int_new(dim, x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],g_tensor,orbitalMax,sqrt_tensor);
 
                           // TABLE IV DEBUG LINE!!!!!!
                           //printf("  (%f %f %f | %f %f %f) -> %17.14f\n",x1[n], y1[l], z1[j], x2[m], y2[k], z2[i],dum);
@@ -1517,7 +1610,6 @@ for (i=0; i<(norbs*norbs*norbs); i++) {
   }while(c<norbs*norbs*norbs);
 
   printf(" exit successful \n");
-
 
 //  for (i=0; i<(norbs*norbs*norbs); i++) {
 //    printf("  Psi( %i , %i, %i ) %i\n",MO[i][0],MO[i][1],MO[i][2],E[i]);
