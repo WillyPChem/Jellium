@@ -12,7 +12,7 @@
 int pi;
 int dim;
 int nmax;
-double L, mass, hbar;
+double L, mass, hbar, Lfac;
 
 // Hartree Fock H20 Files
 
@@ -56,7 +56,6 @@ int *NPOrbE, *NPOrb_x, *NPOrb_y, *NPOrb_z;
 
 
 // Two Electron Repulsion Integral Variables
-
 int main()
 
 {
@@ -77,7 +76,7 @@ int main()
     pi = 4.*atan(1.0); // Definition of pi
     L = 1, mass = 1, hbar = 1; // Atomic Units
     nelec = 2; // Number of electrons in system.
-
+    Lfac = pow(2.,(1./3))/pi;
 
     ntotal=0;
 
@@ -207,7 +206,7 @@ int main()
 
   // Read Nuclear Repulsion
   fscanf(enucfp, "%lf",&Enuc);
-
+  Enuc /= Lfac;
 
   
   // Read 2-electron integrals
@@ -223,14 +222,14 @@ int main()
       fscanf(nucatt,"%i",&ij);
       fscanf(nucatt,"%i",&kl);
       fscanf(nucatt,"%lf",&val);
-      V[i*dim+j] = val;
-      V[j*dim+i] = val;
+      V[i*dim+j] = val/Lfac;
+      V[j*dim+i] = val/Lfac;
 
       fscanf(ekin,"%i",&ij);
       fscanf(ekin,"%i",&kl);
       fscanf(ekin,"%lf",&val);
-      T[i*dim+j] = val;
-      T[j*dim+i] = val;
+      T[i*dim+j] = val/(Lfac*Lfac);
+      T[j*dim+i] = val/(Lfac*Lfac);
 
     }
   }
@@ -275,7 +274,6 @@ int main()
   print_matrix("  Coefficients", dim, dim, C, dim);
 
   print_matrix("  Density Matrix", dim, dim, D, dim);
-
   ESCF_i = E_Total(nelec, dim, D, Hcore, EE, Enuc);
   
   printf("  Initial E_SCF is %12.10f\n",ESCF_i);
@@ -703,6 +701,7 @@ void ReadEI(int dim, FILE *fp, double *EE) {
     j--;
     k--;
     l--;
+    val /= Lfac;
     // ijkl
     //ij = i*(i+1)/2 + j;
     //kl = k*(k+1)/2 + l;
@@ -789,16 +788,19 @@ void BuildDensity(int dim, int occ, double *C, double *D) {
   double sum;
 
 	sum = 0.;
-
+  double trace=0.;
   for (i=0; i<dim; i++) {
     for (j=0; j<dim; j++) {
       sum = 0.;
       for (m=0; m<occ; m++) {
-        sum += C[i*dim+m]*C[j*dim+m];
+        sum += 2*C[i*dim+m]*C[j*dim+m];
       }
       D[i*dim+j] = sum;
+      if (i==j) trace += sum;
     }
   }
+
+  printf("  trace is %12.10f\n",trace);
 }
 
 // Follows Peter Gills notes!
